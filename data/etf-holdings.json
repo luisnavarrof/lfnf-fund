@@ -1,0 +1,168 @@
+{
+  "_meta": {
+    "description": "Top holdings for each ETF in LFNF portfolio. Source: official ETF provider websites, April 2026.",
+    "lastUpdated": "2026-04-09",
+    "note": "Percentages represent weight within the ETF, not within LFNF. Coverage shows what % of the ETF these top holdings represent."
+  },
+  "DYNF": {
+    "name": "iShares U.S. Equity Factor Rotation Active ETF",
+    "source": "iShares / BlackRock",
+    "coverage": 75,
+    "holdings": [
+      { "ticker": "NVDA", "name": "NVIDIA Corporation", "weight": 8.27, "sector": "Technology" },
+      { "ticker": "AAPL", "name": "Apple Inc.", "weight": 7.78, "sector": "Technology" },
+      { "ticker": "MSFT", "name": "Microsoft Corporation", "weight": 5.25, "sector": "Technology" },
+      { "ticker": "AMZN", "name": "Amazon.com, Inc.", "weight": 3.84, "sector": "Consumer Discretionary" },
+      { "ticker": "JPM", "name": "JPMorgan Chase & Co.", "weight": 3.66, "sector": "Financials" },
+      { "ticker": "AVGO", "name": "Broadcom Inc.", "weight": 2.80, "sector": "Technology" },
+      { "ticker": "GOOGL", "name": "Alphabet Inc. Class A", "weight": 2.73, "sector": "Technology" },
+      { "ticker": "CSCO", "name": "Cisco Systems, Inc.", "weight": 2.62, "sector": "Technology" },
+      { "ticker": "BRK.B", "name": "Berkshire Hathaway Inc.", "weight": 2.58, "sector": "Financials" },
+      { "ticker": "META", "name": "Meta Platforms, Inc.", "weight": 2.52, "sector": "Technology" },
+      { "ticker": "WMT", "name": "Walmart Inc.", "weight": 2.20, "sector": "Consumer Staples" },
+      { "ticker": "V", "name": "Visa Inc.", "weight": 2.10, "sector": "Financials" },
+      { "ticker": "UNH", "name": "UnitedHealth Group Inc.", "weight": 2.05, "sector": "Healthcare" },
+      { "ticker": "MA", "name": "Mastercard Inc.", "weight": 1.95, "sector": "Financials" },
+      { "ticker": "HD", "name": "The Home Depot, Inc.", "weight": 1.85, "sector": "Consumer Discretionary" },
+      { "ticker": "PG", "name": "Procter & Gamble Co.", "weight": 1.75, "sector": "Consumer Staples" },
+      { "ticker": "XOM", "name": "Exxon Mobil Corporation", "weight": 1.65, "sector": "Energy" },
+      { "ticker": "JNJ", "name": "Johnson & Johnson", "weight": 1.55, "sector": "Healthcare" },
+      { "ticker": "ABBV", "name": "AbbVie Inc.", "weight": 1.50, "sector": "Healthcare" },
+      { "ticker": "CRM", "name": "Salesforce, Inc.", "weight": 1.45, "sector": "Technology" },
+      { "ticker": "BAC", "name": "Bank of America Corp.", "weight": 1.40, "sector": "Financials" },
+      { "ticker": "COST", "name": "Costco Wholesale Corp.", "weight": 1.35, "sector": "Consumer Staples" },
+      { "ticker": "NFLX", "name": "Netflix, Inc.", "weight": 1.30, "sector": "Technology" },
+      { "ticker": "AMD", "name": "Advanced Micro Devices", "weight": 1.25, "sector": "Technology" },
+      { "ticker": "LIN", "name": "Linde plc", "weight": 1.20, "sector": "Materials" },
+      { "ticker": "ADBE", "name": "Adobe Inc.", "weight": 1.15, "sector": "Technology" },
+      { "ticker": "TXN", "name": "Texas Instruments Inc.", "weight": 1.10, "sector": "Technology" },
+      { "ticker": "ORCL", "name": "Oracle Corporation", "weight": 1.05, "sector": "Technology" },
+      { "ticker": "WFC", "name": "Wells Fargo & Company", "weight": 1.00, "sector": "Financials" },
+      { "ticker": "GS", "name": "Goldman Sachs Group", "weight": 0.95, "sector": "Financials" }
+    ]
+  },
+  "QQQM": {
+    "name": "Invesco NASDAQ 100 ETF",
+    "source": "Invesco",
+    "coverage": 65,
+    "holdings": [
+      { "ticker": "NVDA", "name": "NVIDIA Corporation", "weight": 8.66, "sector": "Technology" },
+      { "ticker": "AAPL", "name": "Apple Inc.", "weight": 7.62, "sector": "Technology" },
+      { "ticker": "MSFT", "name": "Microsoft Corporation", "weight": 5.55, "sector": "Technology" },
+      { "ticker": "AMZN", "name": "Amazon.com, Inc.", "weight": 4.58, "sector": "Consumer Discretionary" },
+      { "ticker": "TSLA", "name": "Tesla, Inc.", "weight": 3.53, "sector": "Consumer Discretionary" },
+      { "ticker": "GOOGL", "name": "Alphabet Inc. Class A", "weight": 3.50, "sector": "Technology" },
+      { "ticker": "WMT", "name": "Walmart Inc.", "weight": 3.43, "sector": "Consumer Staples" },
+      { "ticker": "META", "name": "Meta Platforms, Inc.", "weight": 3.39, "sector": "Technology" },
+      { "ticker": "GOOG", "name": "Alphabet Inc. Class C", "weight": 3.25, "sector": "Technology" },
+      { "ticker": "AVGO", "name": "Broadcom Inc.", "weight": 2.99, "sector": "Technology" },
+      { "ticker": "COST", "name": "Costco Wholesale Corp.", "weight": 2.65, "sector": "Consumer Staples" },
+      { "ticker": "NFLX", "name": "Netflix, Inc.", "weight": 2.50, "sector": "Technology" },
+      { "ticker": "TMUS", "name": "T-Mobile US, Inc.", "weight": 2.20, "sector": "Telecom" },
+      { "ticker": "AMD", "name": "Advanced Micro Devices", "weight": 2.10, "sector": "Technology" },
+      { "ticker": "ADBE", "name": "Adobe Inc.", "weight": 1.90, "sector": "Technology" },
+      { "ticker": "LIN", "name": "Linde plc", "weight": 1.80, "sector": "Materials" },
+      { "ticker": "ISRG", "name": "Intuitive Surgical, Inc.", "weight": 1.70, "sector": "Healthcare" },
+      { "ticker": "CSCO", "name": "Cisco Systems, Inc.", "weight": 1.65, "sector": "Technology" },
+      { "ticker": "INTU", "name": "Intuit Inc.", "weight": 1.55, "sector": "Technology" },
+      { "ticker": "QCOM", "name": "QUALCOMM Inc.", "weight": 1.45, "sector": "Technology" }
+    ]
+  },
+  "XAR": {
+    "name": "SPDR S&P Aerospace & Defense ETF",
+    "source": "State Street / SSGA",
+    "coverage": 50,
+    "holdings": [
+      { "ticker": "BWXT", "name": "BWX Technologies, Inc.", "weight": 3.52, "sector": "Aerospace & Defense" },
+      { "ticker": "CW", "name": "Curtiss-Wright Corporation", "weight": 3.23, "sector": "Aerospace & Defense" },
+      { "ticker": "GD", "name": "General Dynamics Corp.", "weight": 3.18, "sector": "Aerospace & Defense" },
+      { "ticker": "BA", "name": "The Boeing Company", "weight": 3.17, "sector": "Aerospace & Defense" },
+      { "ticker": "HII", "name": "Huntington Ingalls Industries", "weight": 3.15, "sector": "Aerospace & Defense" },
+      { "ticker": "LHX", "name": "L3Harris Technologies", "weight": 3.15, "sector": "Aerospace & Defense" },
+      { "ticker": "LMT", "name": "Lockheed Martin Corp.", "weight": 3.14, "sector": "Aerospace & Defense" },
+      { "ticker": "WWD", "name": "Woodward, Inc.", "weight": 3.14, "sector": "Aerospace & Defense" },
+      { "ticker": "CRS", "name": "Carpenter Technology Corp.", "weight": 3.09, "sector": "Materials" },
+      { "ticker": "RTX", "name": "RTX Corporation", "weight": 3.06, "sector": "Aerospace & Defense" },
+      { "ticker": "NOC", "name": "Northrop Grumman Corp.", "weight": 3.00, "sector": "Aerospace & Defense" },
+      { "ticker": "TDG", "name": "TransDigm Group Inc.", "weight": 2.95, "sector": "Aerospace & Defense" },
+      { "ticker": "HWM", "name": "Howmet Aerospace Inc.", "weight": 2.90, "sector": "Aerospace & Defense" },
+      { "ticker": "TXT", "name": "Textron Inc.", "weight": 2.85, "sector": "Aerospace & Defense" },
+      { "ticker": "AXON", "name": "Axon Enterprise, Inc.", "weight": 2.80, "sector": "Technology" }
+    ]
+  },
+  "AVEM": {
+    "name": "Avantis Emerging Markets Equity ETF",
+    "source": "Avantis Investors",
+    "coverage": 25,
+    "holdings": [
+      { "ticker": "TSM", "name": "Taiwan Semiconductor Mfg.", "weight": 6.38, "sector": "Technology" },
+      { "ticker": "SMSN", "name": "Samsung Electronics Co.", "weight": 3.87, "sector": "Technology" },
+      { "ticker": "000660.KS", "name": "SK Hynix Inc.", "weight": 3.66, "sector": "Technology" },
+      { "ticker": "TCEHY", "name": "Tencent Holdings Ltd.", "weight": 2.06, "sector": "Technology" },
+      { "ticker": "BABA", "name": "Alibaba Group Holding", "weight": 1.05, "sector": "Consumer Discretionary" },
+      { "ticker": "PDD", "name": "PDD Holdings Inc.", "weight": 1.00, "sector": "Consumer Discretionary" },
+      { "ticker": "2317.TW", "name": "Hon Hai Precision Industry", "weight": 0.66, "sector": "Technology" },
+      { "ticker": "AU", "name": "AngloGold Ashanti plc", "weight": 0.66, "sector": "Materials" },
+      { "ticker": "VALE", "name": "Vale S.A.", "weight": 0.60, "sector": "Materials" },
+      { "ticker": "INFY", "name": "Infosys Limited", "weight": 0.55, "sector": "Technology" },
+      { "ticker": "HDB", "name": "HDFC Bank Ltd.", "weight": 0.50, "sector": "Financials" },
+      { "ticker": "RELIANCE.NS", "name": "Reliance Industries Ltd.", "weight": 0.48, "sector": "Energy" },
+      { "ticker": "JD", "name": "JD.com, Inc.", "weight": 0.45, "sector": "Consumer Discretionary" },
+      { "ticker": "MELI", "name": "MercadoLibre, Inc.", "weight": 0.42, "sector": "Consumer Discretionary" },
+      { "ticker": "NU", "name": "Nu Holdings Ltd.", "weight": 0.40, "sector": "Financials" }
+    ]
+  },
+  "QTUM": {
+    "name": "Defiance Quantum ETF",
+    "source": "Defiance ETFs",
+    "coverage": 27,
+    "holdings": [
+      { "ticker": "TER", "name": "Teradyne, Inc.", "weight": 1.93, "sector": "Technology" },
+      { "ticker": "TSEM", "name": "Tower Semiconductor Ltd.", "weight": 1.88, "sector": "Technology" },
+      { "ticker": "MU", "name": "Micron Technology, Inc.", "weight": 1.80, "sector": "Technology" },
+      { "ticker": "NOK", "name": "Nokia Oyj", "weight": 1.78, "sector": "Telecom" },
+      { "ticker": "MKSI", "name": "MKS Instruments, Inc.", "weight": 1.77, "sector": "Technology" },
+      { "ticker": "LMT", "name": "Lockheed Martin Corp.", "weight": 1.70, "sector": "Aerospace & Defense" },
+      { "ticker": "COHR", "name": "Coherent Corp.", "weight": 1.70, "sector": "Technology" },
+      { "ticker": "STM", "name": "STMicroelectronics N.V.", "weight": 1.69, "sector": "Technology" },
+      { "ticker": "ONTO", "name": "Onto Innovation Inc.", "weight": 1.64, "sector": "Technology" },
+      { "ticker": "LRCX", "name": "Lam Research Corp.", "weight": 1.64, "sector": "Technology" },
+      { "ticker": "IONQ", "name": "IonQ, Inc.", "weight": 1.55, "sector": "Technology" },
+      { "ticker": "RGTI", "name": "Rigetti Computing, Inc.", "weight": 1.50, "sector": "Technology" },
+      { "ticker": "QUBT", "name": "Quantum Computing Inc.", "weight": 1.45, "sector": "Technology" },
+      { "ticker": "IBM", "name": "IBM Corporation", "weight": 1.40, "sector": "Technology" },
+      { "ticker": "GOOG", "name": "Alphabet Inc.", "weight": 1.35, "sector": "Technology" }
+    ]
+  },
+  "CQQQ": {
+    "name": "Invesco China Technology ETF",
+    "source": "Invesco",
+    "coverage": 53,
+    "holdings": [
+      { "ticker": "TCEHY", "name": "Tencent Holdings Ltd.", "weight": 9.70, "sector": "Technology" },
+      { "ticker": "PDD", "name": "PDD Holdings Inc.", "weight": 9.60, "sector": "Consumer Discretionary" },
+      { "ticker": "3690.HK", "name": "Meituan Class B", "weight": 9.20, "sector": "Consumer Discretionary" },
+      { "ticker": "BIDU", "name": "Baidu, Inc.", "weight": 6.80, "sector": "Technology" },
+      { "ticker": "1024.HK", "name": "Kuaishou Technology", "weight": 4.90, "sector": "Technology" },
+      { "ticker": "9660.HK", "name": "Horizon Robotics", "weight": 3.00, "sector": "Technology" },
+      { "ticker": "1347.HK", "name": "Hua Hong Semiconductor", "weight": 2.80, "sector": "Technology" },
+      { "ticker": "0020.HK", "name": "SenseTime Group Inc.", "weight": 2.70, "sector": "Technology" },
+      { "ticker": "BILI", "name": "Bilibili Inc.", "weight": 2.60, "sector": "Technology" },
+      { "ticker": "HYGN", "name": "Hygon Information Tech.", "weight": 2.00, "sector": "Technology" }
+    ]
+  },
+  "MAGS": {
+    "name": "Roundhill Magnificent Seven ETF",
+    "source": "Roundhill Investments",
+    "coverage": 100,
+    "holdings": [
+      { "ticker": "GOOGL", "name": "Alphabet Inc.", "weight": 15.05, "sector": "Technology" },
+      { "ticker": "NVDA", "name": "NVIDIA Corporation", "weight": 14.47, "sector": "Technology" },
+      { "ticker": "AMZN", "name": "Amazon.com, Inc.", "weight": 14.46, "sector": "Consumer Discretionary" },
+      { "ticker": "META", "name": "Meta Platforms, Inc.", "weight": 14.26, "sector": "Technology" },
+      { "ticker": "MSFT", "name": "Microsoft Corporation", "weight": 14.18, "sector": "Technology" },
+      { "ticker": "AAPL", "name": "Apple Inc.", "weight": 14.11, "sector": "Technology" },
+      { "ticker": "TSLA", "name": "Tesla, Inc.", "weight": 13.16, "sector": "Consumer Discretionary" }
+    ]
+  }
+}

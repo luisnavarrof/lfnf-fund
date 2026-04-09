@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Portfolio Dashboard — Monitoreo en tiempo real de acciones y ETFs con descomposición transparente." />
+  <meta name="theme-color" content="#06060b" />
+  <title>Portfolio Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+<body>
+  <div id="app">
+    <!-- Setup Overlay -->
+    <div id="setup-overlay" class="setup-overlay" style="display:none;">
+      <div class="setup-card">
+        <div class="header-logo">LF</div>
+        <h1 id="setup-title">Configura tu Portafolio</h1>
+        <p id="setup-subtitle">Bienvenido. Configura tu fondo personal para comenzar a monitorear tus inversiones en tiempo real.</p>
+        
+        <!-- Step 1: Fund Info -->
+        <div id="setup-step-1" class="setup-step-content">
+          <div class="form-group">
+            <label class="form-label">Nombre de tu Fondo *</label>
+            <input type="text" class="form-input" id="setup-fund-name" placeholder="Ej: LFNF Fund, Mi Portafolio..." value="" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tu Nombre</label>
+            <input type="text" class="form-input" id="setup-owner-name" placeholder="Ej: Luis Felipe Navarro" value="" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Broker</label>
+            <input type="text" class="form-input" id="setup-broker" placeholder="Ej: Fintual, eToro, Interactive Brokers..." value="" />
+          </div>
+          <button id="setup-next-1" class="btn btn-primary" style="width:100%; margin-top:var(--space-md);">Siguiente →</button>
+        </div>
+
+        <!-- Step 2: API Key -->
+        <div id="setup-step-2" class="setup-step-content" style="display:none;">
+          <div class="setup-steps">
+            <div class="setup-step">
+              <div class="setup-step-number">1</div>
+              <div class="setup-step-text">
+                Visita <a href="https://finnhub.io/register" target="_blank" rel="noopener">finnhub.io/register</a> y crea una cuenta gratuita (sólo necesitas email).
+              </div>
+            </div>
+            <div class="setup-step">
+              <div class="setup-step-number">2</div>
+              <div class="setup-step-text">
+                Copia tu <strong>API Key</strong> desde el dashboard de Finnhub (sección <code>API Key</code>).
+              </div>
+            </div>
+            <div class="setup-step">
+              <div class="setup-step-number">3</div>
+              <div class="setup-step-text">
+                Pega tu API Key aquí abajo y presiona <strong>Conectar</strong>.
+              </div>
+            </div>
+          </div>
+          <div class="setup-input-row">
+            <input type="text" id="setup-api-key" class="form-input" placeholder="Pega tu API key aquí..." autocomplete="off" />
+            <button id="setup-connect-btn" class="btn btn-primary">Conectar</button>
+          </div>
+          <p id="setup-error" style="color: var(--color-loss); font-size: var(--text-xs); display:none;"></p>
+          <button id="setup-skip-btn" class="setup-skip">Continuar sin API key (modo demo)</button>
+        </div>
+
+        <!-- Step Dots -->
+        <div class="setup-dots" id="setup-dots">
+          <div class="setup-dot active" data-step="1"></div>
+          <div class="setup-dot" data-step="2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <header class="app-header" id="app-header" style="display:none;">
+      <div class="header-inner">
+        <div class="header-brand">
+          <div class="header-logo" id="header-logo-text">LF</div>
+          <div>
+            <div class="header-title" id="header-title-text">LFNF Fund <span id="header-owner-text">por Luis Felipe Navarro Farías</span></div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <div class="header-status" id="header-status">
+            <div class="status-dot" id="status-dot"></div>
+            <span id="status-text">Conectando...</span>
+          </div>
+          <button class="btn btn-ghost btn-icon tooltip" data-tooltip="Actualizar" id="btn-refresh" aria-label="Refresh">
+            ↻
+          </button>
+          <button class="btn btn-ghost btn-icon tooltip" data-tooltip="Configuración" id="btn-settings" aria-label="Settings">
+            ⚙
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav id="nav-tabs" class="nav-tabs" style="display:none;">
+      <button class="nav-tab active" data-tab="dashboard">
+        <span class="tab-icon">📊</span> Dashboard
+      </button>
+      <button class="nav-tab" data-tab="holdings">
+        <span class="tab-icon">💼</span> Holdings
+      </button>
+      <button class="nav-tab" data-tab="transparency">
+        <span class="tab-icon">🔍</span> Transparencia
+      </button>
+      <button class="nav-tab" data-tab="sectors">
+        <span class="tab-icon">🏷️</span> Sectores
+      </button>
+      <button class="nav-tab" data-tab="news">
+        <span class="tab-icon">📰</span> Noticias
+      </button>
+      <button class="nav-tab" data-tab="performance">
+        <span class="tab-icon">📈</span> Performance
+      </button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="main-content" style="display:none;">
+      
+      <!-- ===== DASHBOARD TAB ===== -->
+      <section id="tab-dashboard" class="tab-content active">
+        <!-- Summary Cards -->
+        <div class="summary-row" id="summary-row">
+          <div class="summary-card animate-fade-in-up stagger-1">
+            <div class="summary-card-icon blue">💰</div>
+            <div class="summary-card-label">Valor Total</div>
+            <div class="summary-card-value" id="total-value-clp">—</div>
+            <div class="summary-card-sub" id="total-value-usd">—</div>
+          </div>
+          <div class="summary-card animate-fade-in-up stagger-2">
+            <div class="summary-card-icon green">📈</div>
+            <div class="summary-card-label">Cambio Diario</div>
+            <div class="summary-card-value" id="daily-change">—</div>
+            <div class="summary-card-sub" id="daily-change-clp">—</div>
+          </div>
+          <div class="summary-card animate-fade-in-up stagger-3">
+            <div class="summary-card-icon purple">📦</div>
+            <div class="summary-card-label">Holdings</div>
+            <div class="summary-card-value" id="holdings-count">—</div>
+            <div class="summary-card-sub" id="holdings-breakdown">—</div>
+          </div>
+          <div class="summary-card animate-fade-in-up stagger-4">
+            <div class="summary-card-icon yellow">💱</div>
+            <div class="summary-card-label">USD / CLP</div>
+            <div class="summary-card-value" id="exchange-rate">—</div>
+            <div class="summary-card-sub" id="exchange-update">—</div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="charts-row">
+          <!-- Allocation Chart -->
+          <div class="card animate-fade-in-up stagger-3">
+            <div class="card-header">
+              <h2 class="card-title">Asignación del Portafolio</h2>
+            </div>
+            <div class="card-body">
+              <div class="allocation-chart-wrapper">
+                <div class="allocation-canvas-wrapper">
+                  <canvas id="allocation-chart"></canvas>
+                  <div class="allocation-center-label">
+                    <div class="center-count" id="allocation-center-count">18</div>
+                    <div class="center-text">Holdings</div>
+                  </div>
+                </div>
+                <div class="allocation-legend" id="allocation-legend"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sector Breakdown (Real/Decomposed) -->
+          <div class="card animate-fade-in-up stagger-4">
+            <div class="card-header">
+              <h2 class="card-title">Exposición Sectorial Real</h2>
+            </div>
+            <div class="card-body">
+              <div class="sector-chart-wrapper">
+                <canvas id="sector-chart"></canvas>
+              </div>
+              <div id="sector-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Holdings Table (compact, dashboard version) -->
+        <div class="card animate-fade-in-up stagger-5" style="margin-bottom: var(--space-lg);">
+          <div class="card-header">
+            <h2 class="card-title">Top Holdings</h2>
+            <button class="btn btn-sm" data-tab-switch="holdings">Ver todos →</button>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="holdings-table-wrapper">
+              <table class="holdings-table" id="dashboard-holdings-table">
+                <thead>
+                  <tr>
+                    <th>Holding</th>
+                    <th>Precio</th>
+                    <th>Cambio</th>
+                    <th>Asignación</th>
+                    <th>Valor (CLP)</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboard-holdings-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- News Preview -->
+        <div class="card animate-fade-in-up stagger-6">
+          <div class="card-header">
+            <h2 class="card-title">Noticias del Portafolio</h2>
+            <button class="btn btn-sm" data-tab-switch="news">Ver todas →</button>
+          </div>
+          <div class="card-body">
+            <div class="news-list" id="dashboard-news-list">
+              <div class="empty-state">
+                <div class="spinner"></div>
+                <p class="text-secondary" style="margin-top: var(--space-md);">Cargando noticias...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== HOLDINGS TAB ===== -->
+      <section id="tab-holdings" class="tab-content">
+        <div class="card holdings-card">
+          <div class="card-header holdings-toolbar">
+            <h2 class="card-title">Todos los Holdings</h2>
+            <div style="display:flex; gap:var(--space-sm); align-items:center; flex-wrap:wrap;">
+              <div class="holdings-search">
+                <span class="holdings-search-icon">🔍</span>
+                <input type="text" class="form-input" id="holdings-search" placeholder="Buscar ticker..." />
+              </div>
+              <div class="holdings-filters" id="holdings-filters">
+                <button class="filter-chip active" data-filter="all">Todos</button>
+                <button class="filter-chip" data-filter="ETF">ETFs</button>
+                <button class="filter-chip" data-filter="Stock">Acciones</button>
+              </div>
+              <button class="btn btn-primary btn-sm" id="btn-add-holding">+ Agregar</button>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="holdings-table-wrapper">
+              <table class="holdings-table" id="holdings-table">
+                <thead>
+                  <tr>
+                    <th data-sort="ticker">Holding <span class="sort-icon">↕</span></th>
+                    <th data-sort="price">Precio (USD) <span class="sort-icon">↕</span></th>
+                    <th data-sort="change">Cambio <span class="sort-icon">↕</span></th>
+                    <th data-sort="sector">Sector <span class="sort-icon">↕</span></th>
+                    <th data-sort="allocation">Asignación <span class="sort-icon">↕</span></th>
+                    <th data-sort="valueCLP">Valor (CLP) <span class="sort-icon">↕</span></th>
+                  </tr>
+                </thead>
+                <tbody id="holdings-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== TRANSPARENCY TAB ===== -->
+      <section id="tab-transparency" class="tab-content">
+        <div class="card" style="margin-bottom: var(--space-lg);">
+          <div class="card-header">
+            <h2 class="card-title">🔍 Vista Transparente del Portafolio</h2>
+            <div class="text-tertiary" style="font-size: var(--text-xs);">
+              ETFs descompuestos en sus holdings subyacentes. Acciones consolidadas entre múltiples fuentes.
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Coverage Stats -->
+            <div class="transparency-stats" id="transparency-stats"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header holdings-toolbar">
+            <h2 class="card-title">Todas las Acciones Reales</h2>
+            <div style="display:flex; gap:var(--space-sm); align-items:center; flex-wrap:wrap;">
+              <div class="holdings-search">
+                <span class="holdings-search-icon">🔍</span>
+                <input type="text" class="form-input" id="transparency-search" placeholder="Buscar acción..." />
+              </div>
+              <div class="holdings-filters" id="transparency-filters">
+                <button class="filter-chip active" data-tfilter="all">Todas</button>
+                <button class="filter-chip" data-tfilter="direct">Directas</button>
+                <button class="filter-chip" data-tfilter="via-ETF">Vía ETF</button>
+                <button class="filter-chip" data-tfilter="both">Ambas</button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="holdings-table-wrapper">
+              <table class="holdings-table" id="transparency-table">
+                <thead>
+                  <tr>
+                    <th>Acción</th>
+                    <th>Fuente(s)</th>
+                    <th>Sector</th>
+                    <th>Peso Real en Portafolio</th>
+                  </tr>
+                </thead>
+                <tbody id="transparency-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SECTORS TAB (Real Decomposition) ===== -->
+      <section id="tab-sectors" class="tab-content">
+        <div class="summary-row" id="sector-summary-row" style="margin-bottom: var(--space-lg);"></div>
+        
+        <div class="charts-row" style="grid-template-columns: 1fr 1fr;">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Distribución Sectorial Real</h2>
+              <div class="text-tertiary" style="font-size:var(--text-xs);">ETFs descompuestos en sus holdings subyacentes</div>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="height: 350px;">
+                <canvas id="sector-detail-chart"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Holdings por Sector</h2>
+            </div>
+            <div class="card-body" id="sector-holdings-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== NEWS TAB ===== -->
+      <section id="tab-news" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Noticias Relacionadas al Portafolio</h2>
+            <div class="tabs" id="news-tabs">
+              <button class="tab active" data-news-filter="all">Todas</button>
+              <button class="tab" data-news-filter="etf">ETFs</button>
+              <button class="tab" data-news-filter="stock">Acciones</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="news-list" id="full-news-list" style="max-height: none;">
+              <div class="empty-state">
+                <div class="spinner"></div>
+                <p class="text-secondary" style="margin-top: var(--space-md);">Cargando noticias...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== PERFORMANCE TAB ===== -->
+      <section id="tab-performance" class="tab-content">
+        <!-- LFNF vs S&P 500 -->
+        <div class="card" style="margin-bottom: var(--space-lg);">
+          <div class="card-header performance-header">
+            <h2 class="card-title">Rendimiento del Portafolio vs S&P 500</h2>
+            <div style="display:flex; gap:var(--space-sm); align-items:center;">
+              <div class="performance-legend">
+                <div class="legend-item">
+                  <div class="legend-line lfnf"></div>
+                  <span id="perf-legend-name">LFNF</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-line spy"></div>
+                  <span>S&P 500</span>
+                </div>
+              </div>
+              <div class="tabs" id="perf-range-tabs">
+                <button class="tab" data-range="7">1S</button>
+                <button class="tab active" data-range="30">1M</button>
+                <button class="tab" data-range="90">3M</button>
+                <button class="tab" data-range="180">6M</button>
+                <button class="tab" data-range="365">1A</button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="performance-chart-wrapper" id="performance-chart-container"></div>
+          </div>
+        </div>
+
+        <!-- Contribution Chart -->
+        <div class="card" style="margin-bottom: var(--space-lg);">
+          <div class="card-header">
+            <h2 class="card-title">Contribución por Holding</h2>
+            <div class="text-tertiary" style="font-size:var(--text-xs);">Aporte de cada acción/ETF al rendimiento del portafolio</div>
+          </div>
+          <div class="card-body">
+            <div id="contribution-chart-container" style="height: 300px;"></div>
+          </div>
+        </div>
+
+        <!-- Top Movers -->
+        <div class="charts-row" style="grid-template-columns: 1fr 1fr;">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title" style="color: var(--color-gain);">🚀 Top Ganadores del Día</h2>
+            </div>
+            <div class="card-body" id="top-gainers"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title" style="color: var(--color-loss);">📉 Top Perdedores del Día</h2>
+            </div>
+            <div class="card-body" id="top-losers"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Settings Modal -->
+    <div class="modal-backdrop" id="settings-backdrop"></div>
+    <div class="modal" id="settings-modal">
+      <div class="modal-header">
+        <h2>⚙ Configuración</h2>
+        <button class="modal-close" id="settings-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Nombre del Fondo</label>
+          <input type="text" class="form-input" id="settings-fund-name" placeholder="Tu Fondo..." />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tu Nombre</label>
+          <input type="text" class="form-input" id="settings-owner-name" placeholder="Tu nombre..." />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Finnhub API Key</label>
+          <input type="text" class="form-input" id="settings-api-key" placeholder="Tu API key..." />
+          <small class="text-tertiary" style="font-size: var(--text-xs);">
+            Obtén una gratis en <a href="https://finnhub.io/register" target="_blank">finnhub.io</a>
+          </small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Broker</label>
+          <input type="text" class="form-input" id="settings-broker" value="Fintual" />
+        </div>
+        <hr style="border-color: var(--border-subtle); margin: var(--space-md) 0;" />
+        <div style="display:flex; gap:var(--space-sm); flex-wrap:wrap;">
+          <button class="btn btn-sm" id="btn-clear-cache" style="font-size: var(--text-xs);">🗑 Limpiar caché</button>
+          <button class="btn btn-sm" id="btn-export" style="font-size: var(--text-xs);">📤 Exportar Portfolio</button>
+          <button class="btn btn-sm" id="btn-import" style="font-size: var(--text-xs);">📥 Importar Portfolio</button>
+          <input type="file" id="import-file" accept=".json" style="display:none;" />
+          <button class="btn btn-sm" id="btn-reset" style="font-size: var(--text-xs); color: var(--color-loss);">🔄 Resetear todo</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="settings-cancel">Cancelar</button>
+        <button class="btn btn-primary" id="settings-save">Guardar</button>
+      </div>
+    </div>
+
+    <!-- Add Holding Modal -->
+    <div class="modal-backdrop" id="add-holding-backdrop"></div>
+    <div class="modal" id="add-holding-modal">
+      <div class="modal-header">
+        <h2>➕ Agregar Holding</h2>
+        <button class="modal-close" id="add-holding-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Ticker *</label>
+          <input type="text" class="form-input" id="add-ticker" placeholder="Ej: AAPL" style="text-transform: uppercase;" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nombre Completo *</label>
+          <input type="text" class="form-input" id="add-name" placeholder="Ej: Apple Inc." />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nombre Corto</label>
+          <input type="text" class="form-input" id="add-short-name" placeholder="Ej: Apple" />
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md);">
+          <div class="form-group">
+            <label class="form-label">Tipo *</label>
+            <select class="form-select" id="add-type">
+              <option value="Stock">Acción</option>
+              <option value="ETF">ETF</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Asignación (%) *</label>
+            <input type="number" class="form-input" id="add-allocation" step="0.1" min="0" max="100" placeholder="Ej: 5.0" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sector</label>
+          <select class="form-select" id="add-sector">
+            <option value="Technology">Technology</option>
+            <option value="Healthcare">Healthcare</option>
+            <option value="Financials">Financials</option>
+            <option value="Consumer Discretionary">Consumer Discretionary</option>
+            <option value="Consumer Staples">Consumer Staples</option>
+            <option value="Energy">Energy</option>
+            <option value="Aerospace & Defense">Aerospace & Defense</option>
+            <option value="Emerging Markets">Emerging Markets</option>
+            <option value="Materials">Materials</option>
+            <option value="Telecom">Telecom</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notas</label>
+          <input type="text" class="form-input" id="add-notes" placeholder="Notas opcionales..." />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="add-holding-cancel">Cancelar</button>
+        <button class="btn btn-primary" id="add-holding-save">Agregar</button>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

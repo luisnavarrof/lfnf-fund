@@ -1,0 +1,211 @@
+{
+  "fund": {
+    "name": "LFNF",
+    "fullName": "Luis Felipe Navarro Farías",
+    "currency": "CLP",
+    "totalValueCLP": 2220695,
+    "inceptionDate": "2026-04-09",
+    "broker": "Fintual",
+    "benchmark": "SPY"
+  },
+  "holdings": [
+    {
+      "ticker": "DYNF",
+      "name": "iShares U.S. Equity Factor Rotation Active ETF",
+      "shortName": "DYNF",
+      "type": "ETF",
+      "allocation": 50.8,
+      "sector": "Multi-Factor",
+      "addedDate": "2026-04-09",
+      "officialUrl": "https://www.ishares.com/us/products/323802/ishares-us-equity-factor-rotation-active-etf",
+      "notes": "Core holding - factor rotation strategy"
+    },
+    {
+      "ticker": "NVDA",
+      "name": "NVIDIA Corporation",
+      "shortName": "NVIDIA",
+      "type": "Stock",
+      "allocation": 8.6,
+      "sector": "Technology",
+      "addedDate": "2026-04-09",
+      "officialUrl": "https://investor.nvidia.com",
+      "notes": "AI/GPU leader"
+    },
+    {
+      "ticker": "QQQM",
+      "name": "Invesco NASDAQ 100 ETF",
+      "shortName": "QQQM",
+      "type": "ETF",
+      "allocation": 7.8,
+      "sector": "Technology",
+      "addedDate": "2026-04-09",
+      "officialUrl": "https://www.invesco.com/us/financial-products/etfs/product-detail?audienceType=Investor&ticker=QQQM",
+      "notes": "NASDAQ 100 exposure, lower expense ratio than QQQ"
+    },
+    {
+      "ticker": "XAR",
+      "name": "SPDR S&P Aerospace & Defense ETF",
+      "shortName": "XAR",
+      "type": "ETF",
+      "allocation": 4.0,
+      "sector": "Aerospace & Defense",
+      "addedDate": "2026-04-09",
+      "officialUrl": "https://www.ssga.com/us/en/intermediary/etfs/funds/spdr-sp-aerospace-defense-etf-xar",
+      "notes": "Defense sector exposure"
+    },
+    {
+      "ticker": "AVEM",
+      "name": "Avantis International Small Cap Value ETF",
+      "shortName": "AVEM",
+      "type": "ETF",
+      "allocation": 3.9,
+      "sector": "Emerging Markets",
+      "addedDate": "2026-04-09",
+      "officialUrl": "https://www.avantisinvestors.com/avantis-investments/avantis-international-equity-etf/",
+      "notes": "Emerging markets diversification"
+    },
+    {
+      "ticker": "QTUM",
+      "name": "Defiance Quantum ETF",
+      "shortName": "QTUM",
+      "type": "ETF",
+      "allocation": 3.4,
+      "sector": "Technology",
+      "addedDate": "2026-04-09",
+      "officialUrl": "https://www.defianceetfs.com/qtum",
+      "notes": "Quantum computing & AI"
+    },
+    {
+      "ticker": "PLTR",
+      "name": "Palantir Technologies Inc.",
+      "shortName": "Palantir",
+      "type": "Stock",
+      "allocation": 3.3,
+      "sector": "Technology",
+      "addedDate": "2026-04-09",
+      "officialUrl": "https://investors.palantir.com",
+      "notes": "Data analytics & AI platform"
+    },
+    {
+      "ticker": "META",
+      "name": "Meta Platforms, Inc.",
+      "shortName": "Meta",
+      "type": "Stock",
+      "allocation": 2.8,
+      "sector": "Technology",
+      "addedDate": "2026-04-09",
+      "officialUrl": "https://investor.fb.com",
+      "notes": "Social media & metaverse"
+    },
+    {
+      "ticker": "AMZN",
+      "name": "Amazon.com, Inc.",
+      "shortName": "Amazon",
+      "type": "Stock",
+      "allocation": 2.7,
+      "sector": "Consumer Discretionary",
+      "addedDate": "2026-04-09",
+      "officialUrl": "https://ir.aboutamazon.com",
+      "notes": "E-commerce & cloud (AWS)"
+    },
+    {
+      "ticker": "UNH",
+      "name": "UnitedHealth Group Inc.",
+      "shortName": "UnitedHealth",
+      "type": "Stock",
+      "allocation": 2.2,
+      "sector": "Healthcare",
+      "addedDate": "2026-04-09",
+      "officialUrl": "https://www.unitedhealthgroup.com/investors.html",
+      "notes": "Healthcare insurance & services"
+    },
+    {
+      "ticker": "MSFT",
+      "name": "Microsoft Corporation",
+      "shortName": "Microsoft",
+      "type": "Stock",
+      "allocation": 2.1,
+      "sector": "Technology",
+      "addedDate": "2026-04-09",
+      "officialUrl": "https://www.microsoft.com/en-us/investor",
+      "notes": "Cloud (Azure), AI, enterprise software"
+    },
+    {
+      "ticker": "KKR",
+      "name": "KKR & Co. Inc.",
+      "shortName": "KKR",
+      "type": "Stock",
+      "allocation": 2.0,
+      "sector": "Financials",
+      "addedDate": "2026-04-09",
+      "officialUrl": "https://www.kkr.com/investor-relations",
+      "notes": "Private equity & asset management"
+    },
+    {
+      "ticker": "NBIS",
+      "name": "Nebius Group N.V.",
+      "shortName": "Nebius",
+      "type": "Stock",
+      "allocation": 2.0,
+      "sector": "Technology",
+      "addedDate": "2026-04-09",
+      "officialUrl": "https://group.nebius.com",
+      "notes": "AI infrastructure (ex-Yandex NV). Limited historical data."
+    },
+    {
+      "ticker": "CQQQ",
+      "name": "Invesco China Technology ETF",
+      "shortName": "CQQQ",
+      "type": "ETF",
+      "allocation": 1.4,
+      "sector": "Technology",
+      "addedDate": "2026-04-09",
+      "officialUrl": "https://www.invesco.com/us/financial-products/etfs/product-detail?audienceType=Investor&ticker=CQQQ",
+      "notes": "China tech exposure"
+    },
+    {
+      "ticker": "MAGS",
+      "name": "Roundhill Magnificent Seven ETF",
+      "shortName": "MAGS",
+      "type": "ETF",
+      "allocation": 1.4,
+      "sector": "Technology",
+      "addedDate": "2026-04-09",
+      "officialUrl": "https://www.roundhillinvestments.com/etf/mags",
+      "notes": "Magnificent Seven concentrated exposure"
+    },
+    {
+      "ticker": "OKLO",
+      "name": "Oklo Inc.",
+      "shortName": "Oklo",
+      "type": "Stock",
+      "allocation": 0.7,
+      "sector": "Energy",
+      "addedDate": "2026-04-09",
+      "officialUrl": "https://oklo.com/investors",
+      "notes": "Nuclear fission technology. Limited historical data."
+    },
+    {
+      "ticker": "DUOL",
+      "name": "Duolingo, Inc.",
+      "shortName": "Duolingo",
+      "type": "Stock",
+      "allocation": 0.6,
+      "sector": "Technology",
+      "addedDate": "2026-04-09",
+      "officialUrl": "https://investors.duolingo.com",
+      "notes": "EdTech - language learning platform"
+    },
+    {
+      "ticker": "NKE",
+      "name": "Nike, Inc.",
+      "shortName": "Nike",
+      "type": "Stock",
+      "allocation": 0.4,
+      "sector": "Consumer Discretionary",
+      "addedDate": "2026-04-09",
+      "officialUrl": "https://investors.nike.com",
+      "notes": "Athletic footwear & apparel"
+    }
+  ]
+}
