@@ -130,6 +130,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initTransparencyInteractions();
 });
 
+// Temporary holdings list for onboarding wizard step 3
+let setupHoldings = [];
+
 function initSetup() {
   const profile = getFundProfile();
 
@@ -157,15 +160,10 @@ function initSetup() {
       document.getElementById('setup-fund-name').style.borderColor = 'var(--color-loss)';
       return;
     }
-    document.getElementById('setup-step-1').style.display = 'none';
-    document.getElementById('setup-step-2').style.display = 'block';
-    document.querySelectorAll('.setup-dot').forEach(d => d.classList.remove('active'));
-    document.querySelector('.setup-dot[data-step="2"]').classList.add('active');
-    document.getElementById('setup-title').textContent = 'Conecta tus datos';
-    document.getElementById('setup-subtitle').textContent = 'Para datos de mercado en tiempo real, conecta una API key gratuita de Finnhub.';
+    goToSetupStep(2);
   });
 
-  // Connect button
+  // Step 2 -> Step 3 via Connect
   document.getElementById('setup-connect-btn').addEventListener('click', async () => {
     const key = document.getElementById('setup-api-key').value.trim();
     if (!key) { showSetupError('Por favor, ingresa tu API key.'); return; }
@@ -175,7 +173,7 @@ function initSetup() {
     const valid = await validateApiKey(key);
     if (valid) {
       setApiKey(key);
-      finishSetup();
+      goToSetupStep(3);
     } else {
       showSetupError('API key inválida. Verifica e intenta de nuevo.');
       btn.textContent = 'Conectar';
@@ -183,16 +181,97 @@ function initSetup() {
     }
   });
 
-  // Skip button
+  // Step 2 -> Step 3 via Skip
   document.getElementById('setup-skip-btn').addEventListener('click', () => {
     demoMode = true;
-    finishSetup();
+    goToSetupStep(3);
   });
 
   document.getElementById('setup-api-key').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') document.getElementById('setup-connect-btn').click();
   });
+
+  // Step 3: Add holdings
+  document.getElementById('setup-add-holding-btn').addEventListener('click', () => {
+    const ticker = document.getElementById('setup-holding-ticker').value.trim().toUpperCase();
+    const name = document.getElementById('setup-holding-name').value.trim();
+    const type = document.getElementById('setup-holding-type').value;
+    const allocation = parseFloat(document.getElementById('setup-holding-allocation').value);
+    const sector = document.getElementById('setup-holding-sector').value;
+    if (!ticker || !name || isNaN(allocation) || allocation <= 0) {
+      showToast('❌ Completa ticker, nombre y % válido', 'error');
+      return;
+    }
+    if (setupHoldings.some(h => h.ticker === ticker)) {
+      showToast('❌ Este ticker ya fue agregado', 'error');
+      return;
+    }
+    setupHoldings.push({ ticker, name, shortName: ticker, type, allocation, sector });
+    renderSetupHoldingsList();
+    // Clear inputs
+    document.getElementById('setup-holding-ticker').value = '';
+    document.getElementById('setup-holding-name').value = '';
+    document.getElementById('setup-holding-allocation').value = '';
+    document.getElementById('setup-holding-ticker').focus();
+  });
+
+  // Step 3: Finish
+  document.getElementById('setup-finish-btn').addEventListener('click', () => {
+    finishSetup();
+  });
+
+  // Step 3: Use default LFNF portfolio
+  document.getElementById('setup-use-default-btn')?.addEventListener('click', () => {
+    setupHoldings = defaultPortfolioData.holdings.map(h => ({...h}));
+    renderSetupHoldingsList();
+  });
 }
+
+function goToSetupStep(step) {
+  document.querySelectorAll('.setup-step-content').forEach(el => el.style.display = 'none');
+  document.getElementById(`setup-step-${step}`).style.display = 'block';
+  document.querySelectorAll('.setup-dot').forEach(d => d.classList.remove('active'));
+  document.querySelector(`.setup-dot[data-step="${step}"]`)?.classList.add('active');
+
+  const titles = {
+    1: ['Configura tu Portafolio', 'Bienvenido. Configura tu fondo personal para comenzar a monitorear tus inversiones en tiempo real.'],
+    2: ['Conecta tus datos', 'Para datos de mercado en tiempo real, conecta una API key gratuita de Finnhub.'],
+    3: ['Agrega tus Holdings', 'Ingresa las acciones y ETFs de tu portafolio con sus respectivos porcentajes de asignación.'],
+  };
+  document.getElementById('setup-title').textContent = titles[step][0];
+  document.getElementById('setup-subtitle').textContent = titles[step][1];
+}
+
+function renderSetupHoldingsList() {
+  const list = document.getElementById('setup-holdings-list');
+  const totalPct = setupHoldings.reduce((sum, h) => sum + h.allocation, 0);
+  const countEl = document.getElementById('setup-holdings-count');
+  if (countEl) countEl.textContent = `${setupHoldings.length} holdings • ${totalPct.toFixed(1)}% total`;
+
+  if (!setupHoldings.length) {
+    list.innerHTML = '<div class="text-tertiary" style="text-align:center; padding:var(--space-md); font-size:var(--text-sm);">Aún no has agregado holdings.</div>';
+    return;
+  }
+  list.innerHTML = setupHoldings.map((h, i) => `
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border-subtle);">
+      <div style="display:flex; align-items:center; gap:var(--space-sm);">
+        <span class="badge ${h.type === 'ETF' ? 'badge-etf' : 'badge-stock'}">${h.type}</span>
+        <span class="font-bold" style="font-size:var(--text-sm);">${h.ticker}</span>
+        <span class="text-tertiary" style="font-size:var(--text-xs);">${h.name}</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:var(--space-sm);">
+        <span class="font-mono font-bold" style="font-size:var(--text-sm);">${h.allocation.toFixed(1)}%</span>
+        <button class="btn btn-ghost btn-icon" style="font-size:0.7rem; width:24px; height:24px;" onclick="document.dispatchEvent(new CustomEvent('remove-setup-holding', {detail:${i}}))">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Listen for remove events from setup holdings list
+document.addEventListener('remove-setup-holding', (e) => {
+  setupHoldings.splice(e.detail, 1);
+  renderSetupHoldingsList();
+});
 
 function finishSetup() {
   const profile = {
@@ -203,6 +282,16 @@ function finishSetup() {
   };
   saveFundProfile(profile);
   applyFundProfile(profile);
+
+  // If user added holdings in step 3, use those
+  if (setupHoldings.length > 0) {
+    portfolio.holdings = setupHoldings.map(h => ({
+      ...h,
+      addedDate: new Date().toISOString().split('T')[0],
+    }));
+    savePortfolio(portfolio);
+  }
+
   document.getElementById('setup-overlay').style.display = 'none';
   showApp();
   loadData();
@@ -412,6 +501,7 @@ function createHoldingRow(h, showSector) {
   const changeDisplay = h.changePercent !== null ? formatPercent(h.changePercent) : '—';
   const allocationWidth = Math.min(h.allocation * 2, 100);
   const sectorCell = showSector ? `<td><span class="badge badge-sector">${h.sector}</span></td>` : '';
+  const actionsCell = showSector ? `<td style="text-align:center;"><div style="display:flex;gap:4px;justify-content:center;"><button class="btn btn-ghost btn-icon holding-edit-btn" data-ticker="${h.ticker}" title="Editar" style="font-size:0.75rem;width:28px;height:28px;">✏️</button><button class="btn btn-ghost btn-icon holding-delete-btn" data-ticker="${h.ticker}" title="Eliminar" style="font-size:0.75rem;width:28px;height:28px;color:var(--color-loss);">🗑</button></div></td>` : '';
   return `
     <tr data-ticker="${h.ticker}">
       <td><div class="holding-name-cell"><div class="holding-ticker-icon ${h.type.toLowerCase()}">${h.ticker.substring(0, 2)}</div><div class="holding-info"><span class="holding-ticker">${h.ticker}</span><span class="holding-full-name">${h.name}</span></div></div></td>
@@ -420,6 +510,7 @@ function createHoldingRow(h, showSector) {
       ${sectorCell}
       <td><div class="holding-allocation-bar"><div class="allocation-bar"><div class="allocation-bar-fill" style="width:${allocationWidth}%"></div></div><span class="allocation-value">${formatPercentAbs(h.allocation)}</span></div></td>
       <td><div><div class="holding-value-clp">${formatCLP(h.valueCLP)}</div><div class="holding-value-usd">≈ ${formatUSD(h.valueUSD)}</div></div></td>
+      ${actionsCell}
     </tr>`;
 }
 
@@ -608,18 +699,27 @@ function createNewsItem(news) {
 // PERFORMANCE TAB
 // ============================================
 function renderPerformanceTab() {
-  renderPerformanceChart();
+  try { renderPerformanceChart(); } catch(e) { console.warn('Perf chart:', e); }
   renderContributionChart();
   renderTopMovers();
 }
 
-function renderPerformanceChart(days = 30) {
+// Seeded PRNG for deterministic performance data
+function seededRandom(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 16807 + 0) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+function renderPerformanceChart() {
   const container = document.getElementById('performance-chart-container');
   container.innerHTML = '';
   if (performanceChart) { try { performanceChart.remove(); } catch(e) {} performanceChart = null; }
 
   const chart = createChart(container, {
-    width: container.clientWidth || 800, height: 350,
+    width: container.clientWidth || 800, height: 400,
     layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: '#94a3b8', fontFamily: "'Inter', sans-serif", fontSize: 11 },
     grid: { vertLines: { color: 'rgba(148,163,184,0.05)' }, horzLines: { color: 'rgba(148,163,184,0.05)' } },
     crosshair: { vertLine: { color: 'rgba(59,130,246,0.3)', width: 1, style: LineStyle.Dashed }, horzLine: { color: 'rgba(59,130,246,0.3)', width: 1, style: LineStyle.Dashed } },
@@ -628,9 +728,9 @@ function renderPerformanceChart(days = 30) {
     handleScroll: true, handleScale: true,
   });
 
-  // Generate weighted performance based on actual holdings
-  const lfnfData = generateWeightedPerformance(days, enrichedHoldings);
-  const spyData = generatePerformanceData(days, 0.0004, 0.011);
+  // Full history from Jan 2019 to today — deterministic
+  const lfnfData = generateDeterministicPerformance(42, 0.0007, 0.015);
+  const spyData = generateDeterministicPerformance(123, 0.0004, 0.012);
 
   const lfnfSeries = chart.addSeries(AreaSeries, { lineColor: '#3b82f6', topColor: 'rgba(59,130,246,0.20)', bottomColor: 'rgba(59,130,246,0.02)', lineWidth: 2, priceFormat: { type: 'percent' } });
   lfnfSeries.setData(lfnfData);
@@ -645,38 +745,24 @@ function renderPerformanceChart(days = 30) {
   resizeObserver.observe(container);
 }
 
-function generateWeightedPerformance(days, holdings) {
-  // Simulate portfolio performance weighted by actual allocations
+function generateDeterministicPerformance(seed, dailyReturn, volatility) {
+  const rng = seededRandom(seed);
   const data = [];
   let value = 100;
+  const start = new Date('2019-01-02');
   const now = new Date();
-  // Higher-beta holdings contribute more volatility
-  const avgBeta = 1.1; // slightly aggressive portfolio
-  const dailyReturn = 0.0007 * avgBeta;
-  const volatility = 0.014 * avgBeta;
 
-  for (let i = days; i >= 0; i--) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-    if (date.getDay() === 0 || date.getDay() === 6) continue;
-    const change = dailyReturn + (Math.random() - 0.48) * 2 * volatility;
+  for (let d = new Date(start); d <= now; d.setDate(d.getDate() + 1)) {
+    if (d.getDay() === 0 || d.getDay() === 6) continue;
+    const change = dailyReturn + (rng() - 0.48) * 2 * volatility;
     value *= (1 + change);
-    data.push({ time: date.toISOString().split('T')[0], value: parseFloat((value - 100).toFixed(2)) });
-  }
-  return data;
-}
-
-function generatePerformanceData(days, dailyReturn, volatility) {
-  const data = [];
-  let value = 100;
-  const now = new Date();
-  for (let i = days; i >= 0; i--) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-    if (date.getDay() === 0 || date.getDay() === 6) continue;
-    const change = dailyReturn + (Math.random() - 0.5) * 2 * volatility;
-    value *= (1 + change);
-    data.push({ time: date.toISOString().split('T')[0], value: parseFloat((value - 100).toFixed(2)) });
+    // Simulate COVID crash (March 2020)
+    const m = d.getMonth(), y = d.getFullYear();
+    if (y === 2020 && m === 2) value *= (1 - rng() * 0.025);
+    if (y === 2020 && m === 3) value *= (1 + rng() * 0.02);
+    // Simulate 2022 bear
+    if (y === 2022 && m >= 0 && m <= 5) value *= (1 - rng() * 0.003);
+    data.push({ time: d.toISOString().split('T')[0], value: parseFloat((value - 100).toFixed(2)) });
   }
   return data;
 }
@@ -769,13 +855,7 @@ function initNavigation() {
   document.querySelectorAll('[data-tab-switch]').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tabSwitch));
   });
-  document.querySelectorAll('#perf-range-tabs .tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('#perf-range-tabs .tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      renderPerformanceChart(parseInt(tab.dataset.range));
-    });
-  });
+  // Performance range tabs removed — single full-history chart
   document.querySelectorAll('#news-tabs .tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('#news-tabs .tab').forEach(t => t.classList.remove('active'));
@@ -796,9 +876,7 @@ function switchTab(tabName) {
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById(`tab-${tabName}`)?.classList.add('active');
   if (tabName === 'performance') {
-    const activeRange = document.querySelector('#perf-range-tabs .tab.active');
-    const days = activeRange ? parseInt(activeRange.dataset.range) : 30;
-    setTimeout(() => { try { renderPerformanceChart(days); } catch(e) {} }, 50);
+    setTimeout(() => { try { renderPerformanceChart(); } catch(e) {} }, 50);
   }
 }
 
@@ -826,6 +904,36 @@ function initHoldingsInteractions() {
       th.dataset.dir = currentDir;
       renderFullHoldings(document.querySelector('#holdings-filters .filter-chip.active')?.dataset.filter || 'all', document.getElementById('holdings-search')?.value || '', sortBy, currentDir);
     });
+  });
+
+  // Edit & Delete — delegated event listeners on the holdings table
+  document.getElementById('holdings-body')?.closest('table')?.addEventListener('click', (e) => {
+    const editBtn = e.target.closest('.holding-edit-btn');
+    const deleteBtn = e.target.closest('.holding-delete-btn');
+
+    if (editBtn) {
+      const ticker = editBtn.dataset.ticker;
+      const holding = portfolio.holdings.find(h => h.ticker === ticker);
+      if (!holding) return;
+      const newAlloc = prompt(`Nuevo porcentaje para ${ticker} (actual: ${holding.allocation}%):`, holding.allocation);
+      if (newAlloc === null) return;
+      const parsed = parseFloat(newAlloc);
+      if (isNaN(parsed) || parsed < 0 || parsed > 100) { showToast('❌ Porcentaje inválido', 'error'); return; }
+      holding.allocation = parsed;
+      savePortfolio(portfolio);
+      Cache.clearAll();
+      loadData();
+      showToast(`✅ ${ticker} actualizado a ${parsed}%`, 'success');
+    }
+
+    if (deleteBtn) {
+      const ticker = deleteBtn.dataset.ticker;
+      if (!confirm(`¿Eliminar ${ticker} del portafolio?`)) return;
+      portfolio = removeHolding(portfolio, ticker);
+      Cache.clearAll();
+      loadData();
+      showToast(`🗑 ${ticker} eliminado`, 'info');
+    }
   });
 }
 

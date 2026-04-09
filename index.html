@@ -64,10 +64,51 @@
           <button id="setup-skip-btn" class="setup-skip">Continuar sin API key (modo demo)</button>
         </div>
 
+        <!-- Step 3: Add Holdings -->
+        <div id="setup-step-3" class="setup-step-content" style="display:none;">
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 8px; padding: var(--space-md); margin-bottom: var(--space-md);">
+            <div style="display:grid; grid-template-columns: 1fr 2fr; gap: var(--space-sm); margin-bottom: var(--space-sm);">
+              <div class="form-group"><label class="form-label">Ticker</label><input type="text" id="setup-holding-ticker" class="form-input" placeholder="Ej: AAPL" style="text-transform: uppercase;"></div>
+              <div class="form-group"><label class="form-label">Nombre / Empresa</label><input type="text" id="setup-holding-name" class="form-input" placeholder="Ej: Apple Inc."></div>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-sm); margin-bottom: var(--space-md);">
+              <div class="form-group"><label class="form-label">Tipo</label>
+                <select id="setup-holding-type" class="form-input">
+                  <option value="ETF">ETF</option>
+                  <option value="Stock">Acción</option>
+                </select>
+              </div>
+              <div class="form-group"><label class="form-label">Sector</label>
+                <select id="setup-holding-sector" class="form-input">
+                  <option value="Technology">Technology</option><option value="Financials">Financials</option><option value="Healthcare">Healthcare</option><option value="Consumer Discretionary">Consumer Discretionary</option><option value="Multi-Factor">Multi-Factor</option><option value="Other">Otro...</option>
+                </select>
+              </div>
+              <div class="form-group"><label class="form-label">Peso (%)</label><input type="number" id="setup-holding-allocation" class="form-input" placeholder="Ej: 15.5" step="0.1" min="0" max="100"></div>
+            </div>
+            <button id="setup-add-holding-btn" class="btn btn-primary btn-sm" style="width:100%;">+ Agregar Holding</button>
+          </div>
+          
+          <div style="margin-bottom: var(--space-md);">
+            <div style="display:flex; justify-content:space-between; margin-bottom: var(--space-sm);">
+              <span class="form-label">Tus Holdings</span>
+              <span id="setup-holdings-count" class="text-tertiary" style="font-size:var(--text-xs);">0 holdings • 0% total</span>
+            </div>
+            <div id="setup-holdings-list" style="background: rgba(0,0,0,0.2); border-radius: 6px; padding: var(--space-sm); min-height: 100px; max-height: 200px; overflow-y: auto;">
+              <div class="text-tertiary" style="text-align:center; padding:var(--space-md); font-size:var(--text-sm);">Aún no has agregado holdings.</div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap: var(--space-md); margin-top: var(--space-lg);">
+            <button id="setup-use-default-btn" class="btn btn-ghost" style="flex:1;">Cargar Demo</button>
+            <button id="setup-finish-btn" class="btn btn-primary" style="flex:2;">Finalizar Configuración</button>
+          </div>
+        </div>
+
         <!-- Step Dots -->
         <div class="setup-dots" id="setup-dots">
           <div class="setup-dot active" data-step="1"></div>
           <div class="setup-dot" data-step="2"></div>
+          <div class="setup-dot" data-step="3"></div>
         </div>
       </div>
     </div>
@@ -256,6 +297,7 @@
                     <th data-sort="sector">Sector <span class="sort-icon">↕</span></th>
                     <th data-sort="allocation">Asignación <span class="sort-icon">↕</span></th>
                     <th data-sort="valueCLP">Valor (CLP) <span class="sort-icon">↕</span></th>
+                    <th style="width: 80px; text-align: center;">Acciones</th>
                   </tr>
                 </thead>
                 <tbody id="holdings-body"></tbody>
@@ -377,13 +419,6 @@
                   <div class="legend-line spy"></div>
                   <span>S&P 500</span>
                 </div>
-              </div>
-              <div class="tabs" id="perf-range-tabs">
-                <button class="tab" data-range="7">1S</button>
-                <button class="tab active" data-range="30">1M</button>
-                <button class="tab" data-range="90">3M</button>
-                <button class="tab" data-range="180">6M</button>
-                <button class="tab" data-range="365">1A</button>
               </div>
             </div>
           </div>
