@@ -481,7 +481,7 @@ function renderAllocationChart() {
   });
   const legendEl = document.getElementById('allocation-legend');
   legendEl.innerHTML = sorted.map((h, i) => `
-    <div class="legend-row"><div class="legend-row-left"><div class="legend-color" style="background:${HOLDING_COLORS[i % HOLDING_COLORS.length]}"></div><span class="legend-label">${h.shortName || h.ticker}</span></div><span class="legend-value">${formatPercentAbs(h.allocation)}</span></div>
+    <div class="legend-row"><div class="legend-row-left"><div class="legend-color" style="background:${HOLDING_COLORS[i % HOLDING_COLORS.length]}"></div><span class="legend-label"><strong>${escHtml(h.ticker)}</strong> <span class="text-tertiary" style="font-size:var(--text-xs);">${escHtml(h.name)}</span></span></div><span class="legend-value">${formatPercentAbs(h.allocation)}</span></div>
   `).join('');
   document.getElementById('allocation-center-count').textContent = enrichedHoldings.length;
 }
@@ -495,25 +495,36 @@ function renderSectorChart() {
   const sectorEntries = Object.entries(realSectors).sort((a, b) => b[1].allocation - a[1].allocation);
   if (sectorChart) sectorChart.destroy();
   sectorChart = new Chart(ctx, {
-    type: 'polarArea',
+    type: 'bar',
     data: {
       labels: sectorEntries.map(([name]) => name),
-      datasets: [{ data: sectorEntries.map(([, d]) => d.allocation), backgroundColor: sectorEntries.map(([name]) => getSectorColor(name) + '50'), borderColor: sectorEntries.map(([name]) => getSectorColor(name)), borderWidth: 1.5 }],
+      datasets: [{
+        data: sectorEntries.map(([, d]) => d.allocation),
+        backgroundColor: sectorEntries.map(([name]) => getSectorColor(name) + '80'),
+        borderColor: sectorEntries.map(([name]) => getSectorColor(name)),
+        borderWidth: 1,
+        borderRadius: 6,
+        barPercentage: 0.7,
+        categoryPercentage: 0.85,
+      }],
     },
     options: {
-      responsive: true, maintainAspectRatio: true,
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
       plugins: {
         legend: { display: false },
         tooltip: { backgroundColor: 'rgba(17, 17, 25, 0.95)', titleColor: '#f1f5f9', bodyColor: '#94a3b8', borderColor: 'rgba(148,163,184,0.12)', borderWidth: 1, cornerRadius: 8, padding: 12,
           callbacks: { label: (ctx) => { const [name, data] = sectorEntries[ctx.dataIndex]; return `${name}: ${formatPercentAbs(data.allocation)} (${data.count} acciones)`; } },
         },
       },
-      scales: { r: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(148,163,184,0.06)' }, ticks: { color: '#64748b', font: { size: 10 }, callback: (v) => v.toFixed(0) + '%' }, beginAtZero: true },
+        y: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11, weight: 500 } } },
+      },
       animation: { duration: 800, easing: 'easeOutQuart' },
     },
   });
   const listEl = document.getElementById('sector-list');
-  listEl.innerHTML = sectorEntries.slice(0, 8).map(([name, data]) => `
+  listEl.innerHTML = sectorEntries.map(([name, data]) => `
     <div class="sector-item"><div class="sector-info"><div class="sector-dot" style="background:${getSectorColor(name)}"></div><span class="sector-name">${name}<span class="sector-count">(${data.count})</span></span></div><span class="sector-percentage">${formatPercentAbs(data.allocation)}</span></div>
   `).join('');
 }
