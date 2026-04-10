@@ -15,7 +15,7 @@ import { createChart, ColorType, LineStyle, AreaSeries, LineSeries } from 'light
 
 // Modules
 import defaultPortfolioData from '../data/portfolio.json';
-import { hasApiKey, setApiKey, validateApiKey, getBatchQuotes, getPortfolioNews, searchSymbols, getCandles } from './api/finnhub.js';
+import { hasApiKey, setApiKey, validateApiKey, getBatchQuotes, getPortfolioNews, searchSymbols, getCandles, getCompanyProfile, getEtfHoldings } from './api/finnhub.js';
 import { getUsdClpRate } from './api/exchange.js';
 import { Cache } from './api/cache.js';
 import {
@@ -29,7 +29,8 @@ import {
   getSectorColor, SECTOR_COLORS, HOLDING_COLORS
 } from './utils/formatters.js';
 import {
-  decomposePortfolio, calculateRealSectors, getCoverage, getSourceBadge
+  decomposePortfolio, calculateRealSectors, getCoverage, getSourceBadge,
+  registerDynamicEtfHoldings, hasEtfDecomposition
 } from './utils/transparency.js';
 
 // ============================================
@@ -263,7 +264,8 @@ function initSetup() {
     const type = document.getElementById('setup-holding-type').value || 'Stock';
     const rawValue = parseFloat(document.getElementById('setup-holding-allocation').value);
     const inputMode = document.getElementById('setup-holding-input-mode').value;
-    const sector = document.getElementById('setup-holding-sector').value;
+    const sectorRaw = document.getElementById('setup-holding-sector').value;
+    const sector = (sectorRaw === 'Auto') ? (SECTOR_LOOKUP[ticker] || 'Other') : sectorRaw;
 
     if (!ticker || !name || isNaN(rawValue) || rawValue <= 0) {
       showToast('❌ Selecciona un activo y escribe un valor válido', 'error');
@@ -420,6 +422,12 @@ async function loadData() {
     } else {
       const tickers = portfolio.holdings.map(h => h.ticker);
       quotes = await getBatchQuotes(tickers);
+
+      // Auto-detect sectors for holdings that need it
+      await autoDetectSectors();
+
+      // Dynamically fetch ETF holdings for ETFs not in static data
+      await fetchDynamicEtfHoldings();
     }
 
     enrichedHoldings = calculateHoldingValues(portfolio, quotes, usdClpRate);
@@ -451,6 +459,179 @@ async function loadData() {
     showToast('❌ Error: ' + error.message, 'error');
   }
   isLoading = false;
+}
+
+/**
+ * Auto-detect sectors for portfolio holdings using Finnhub company profiles.
+ * Maps Finnhub industry names to our sector categories.
+ */
+async function autoDetectSectors() {
+  const industryToSector = {
+    'Technology': 'Technology',
+    'Software': 'Technology',
+    'Semiconductors': 'Technology',
+    'Electronic Technology': 'Technology',
+    'Information Technology Services': 'Technology',
+    'Communications Equipment': 'Technology',
+    'Computer Hardware': 'Technology',
+    'Internet Software/Services': 'Technology',
+    'EDP Services': 'Technology',
+    'Internet Retail': 'Technology',
+    'Data Processing Services': 'Technology',
+    'Packaged Software': 'Technology',
+    'Electronic Components': 'Technology',
+    'Electronic Production Equipment': 'Technology',
+    'Telecommunications Equipment': 'Technology',
+    'Healthcare': 'Healthcare',
+    'Health Technology': 'Healthcare',
+    'Health Services': 'Healthcare',
+    'Pharmaceuticals': 'Healthcare',
+    'Medical Specialties': 'Healthcare',
+    'Biotechnology': 'Healthcare',
+    'Managed Health Care': 'Healthcare',
+    'Hospital/Nursing Management': 'Healthcare',
+    'Medical/Nursing Services': 'Healthcare',
+    'Financials': 'Financials',
+    'Finance': 'Financials',
+    'Financial Services': 'Financials',
+    'Major Banks': 'Financials',
+    'Regional Banks': 'Financials',
+    'Investment Banks/Brokers': 'Financials',
+    'Investment Managers': 'Financials',
+    'Finance/Rental/Leasing': 'Financials',
+    'Financial Conglomerates': 'Financials',
+    'Life/Health Insurance': 'Financials',
+    'Property/Casualty Insurance': 'Financials',
+    'Multi-Line Insurance': 'Financials',
+    'Specialty Insurance': 'Financials',
+    'Real Estate Investment Trusts': 'Financials',
+    'Real Estate Development': 'Financials',
+    'Consumer Durables': 'Consumer Discretionary',
+    'Consumer Non-Durables': 'Consumer Staples',
+    'Consumer Discretionary': 'Consumer Discretionary',
+    'Consumer Staples': 'Consumer Staples',
+    'Consumer Services': 'Consumer Discretionary',
+    'Retail Trade': 'Consumer Discretionary',
+    'Apparel/Footwear Retail': 'Consumer Discretionary',
+    'Specialty Stores': 'Consumer Discretionary',
+    'Department/Specialty Retail Stores': 'Consumer Discretionary',
+    'Food Retail': 'Consumer Staples',
+    'Household/Personal Care': 'Consumer Staples',
+    'Food: Major Diversified': 'Consumer Staples',
+    'Beverages: Non-Alcoholic': 'Consumer Staples',
+    'Beverages: Alcoholic': 'Consumer Staples',
+    'Tobacco': 'Consumer Staples',
+    'Food: Meat/Fish/Dairy': 'Consumer Staples',
+    'Food: Specialty/Candy': 'Consumer Staples',
+    'Restaurants': 'Consumer Discretionary',
+    'Hotels/Resorts/Cruise lines': 'Consumer Discretionary',
+    'Movies/Entertainment': 'Consumer Discretionary',
+    'Broadcasting': 'Consumer Discretionary',
+    'Cable/Satellite TV': 'Consumer Discretionary',
+    'Publishing: Newspapers': 'Consumer Discretionary',
+    'Motor Vehicles': 'Consumer Discretionary',
+    'Auto Parts: OEM': 'Consumer Discretionary',
+    'Homebuilding': 'Consumer Discretionary',
+    'Home Furnishings': 'Consumer Discretionary',
+    'Recreational Products': 'Consumer Discretionary',
+    'Apparel/Footwear': 'Consumer Discretionary',
+    'Energy': 'Energy',
+    'Energy Minerals': 'Energy',
+    'Integrated Oil': 'Energy',
+    'Oil & Gas Production': 'Energy',
+    'Oil Refining/Marketing': 'Energy',
+    'Oil & Gas Pipelines': 'Energy',
+    'Oilfield Services/Equipment': 'Energy',
+    'Coal': 'Energy',
+    'Aerospace & Defense': 'Aerospace & Defense',
+    'Aerospace': 'Aerospace & Defense',
+    'Defense': 'Aerospace & Defense',
+    'Materials': 'Materials',
+    'Non-Energy Minerals': 'Materials',
+    'Process Industries': 'Materials',
+    'Chemicals: Major Diversified': 'Materials',
+    'Chemicals: Specialty': 'Materials',
+    'Chemicals: Agricultural': 'Materials',
+    'Industrial Specialties': 'Materials',
+    'Steel': 'Materials',
+    'Aluminum': 'Materials',
+    'Forest Products': 'Materials',
+    'Precious Metals': 'Materials',
+    'Other Metals/Minerals': 'Materials',
+    'Construction Materials': 'Materials',
+    'Containers/Packaging': 'Materials',
+    'Telecom': 'Telecom',
+    'Telecommunications': 'Telecom',
+    'Major Telecommunications': 'Telecom',
+    'Wireless Telecommunications': 'Telecom',
+    'Utilities': 'Other',
+    'Electric Utilities': 'Other',
+    'Gas Distributors': 'Other',
+    'Water Utilities': 'Other',
+    'Industrials': 'Other',
+    'Industrial Services': 'Other',
+    'Producer Manufacturing': 'Other',
+    'Commercial Services': 'Other',
+    'Transportation': 'Other',
+    'Trucking': 'Other',
+    'Airlines': 'Other',
+    'Railroads': 'Other',
+    'Air Freight/Couriers': 'Other',
+    'Marine Shipping': 'Other',
+    'Contract Drilling': 'Other',
+    'Environmental Services': 'Other',
+    'Engineering & Construction': 'Other',
+    'Electrical Products': 'Other',
+    'Industrial Machinery': 'Other',
+    'Trucks/Construction/Farm Machinery': 'Other',
+    'Metal Fabrication': 'Other',
+    'Industrial Conglomerates': 'Other',
+    'Building Products': 'Other',
+    'Wholesale Distributors': 'Other',
+    'Office Equipment/Supplies': 'Other',
+    'Miscellaneous Commercial Services': 'Other',
+    'Personnel Services': 'Other',
+    'Miscellaneous': 'Other',
+  };
+
+  for (const holding of portfolio.holdings) {
+    // Only auto-detect for individual stocks/funds, not ETFs (ETFs get sector from decomposition)
+    if (holding.type === 'ETF') continue;
+    // Skip if sector is already set from SECTOR_LOOKUP
+    if (SECTOR_LOOKUP[holding.ticker]) {
+      holding.sector = SECTOR_LOOKUP[holding.ticker];
+      continue;
+    }
+    try {
+      const profile = await getCompanyProfile(holding.ticker);
+      if (profile && profile.finnhubIndustry) {
+        const mapped = industryToSector[profile.finnhubIndustry];
+        if (mapped) {
+          holding.sector = mapped;
+        }
+      }
+    } catch (e) {
+      // Silently continue
+    }
+  }
+  savePortfolio(portfolio);
+}
+
+/**
+ * Fetch ETF holdings dynamically from Finnhub for ETFs not in static data.
+ */
+async function fetchDynamicEtfHoldings() {
+  const etfs = portfolio.holdings.filter(h => h.type === 'ETF' && !hasEtfDecomposition(h.ticker));
+  for (const etf of etfs) {
+    try {
+      const data = await getEtfHoldings(etf.ticker);
+      if (data) {
+        registerDynamicEtfHoldings(etf.ticker, data);
+      }
+    } catch (e) {
+      console.warn(`Could not fetch holdings for ${etf.ticker}:`, e.message);
+    }
+  }
 }
 
 async function loadNews() {
@@ -832,8 +1013,8 @@ function createNewsItem(news) {
 // PERFORMANCE TAB
 // ============================================
 function renderPerformanceTab() {
-  try { renderPerformanceChart(); } catch(e) { console.warn('Perf chart:', e); }
-  try { renderAllHoldingsPerfChart(); } catch(e) { console.warn('All holdings perf chart:', e); }
+  renderPerformanceChart().catch(e => console.warn('Perf chart:', e));
+  renderAllHoldingsPerfChart().catch(e => console.warn('All holdings perf chart:', e));
   renderContributionChart();
   renderTopMovers();
   renderHoldingPerfSelector();
@@ -848,11 +1029,113 @@ function seededRandom(seed) {
   };
 }
 
-function renderPerformanceChart() {
+/**
+ * Helper: fetch candle data for a symbol with a given lookback period.
+ * Returns array of {time, value} or null.
+ */
+async function fetchCandleDataSafe(symbol, fromTs, toTs) {
+  if (demoMode) return null;
+  try {
+    const data = await getCandles(symbol, 'D', fromTs, toTs);
+    if (data && data.s === 'ok' && data.c && data.c.length > 2) {
+      return data.t.map((t, i) => ({
+        time: new Date(t * 1000).toISOString().split('T')[0],
+        value: parseFloat(data.c[i].toFixed(2)),
+      }));
+    }
+  } catch (e) { /* ignore */ }
+  return null;
+}
+
+/**
+ * Convert price data to % return data (normalized to 0% at first point).
+ */
+function pricesToReturns(priceData) {
+  if (!priceData || priceData.length === 0) return [];
+  const base = priceData[0].value;
+  if (base === 0) return [];
+  return priceData.map(d => ({
+    time: d.time,
+    value: parseFloat((((d.value / base) - 1) * 100).toFixed(2)),
+  }));
+}
+
+async function renderPerformanceChart() {
   const container = document.getElementById('performance-chart-container');
-  container.innerHTML = '';
+  container.innerHTML = '<div class="empty-state"><div class="spinner"></div><p class="text-tertiary" style="margin-top:var(--space-sm);">Cargando rendimiento...</p></div>';
   if (performanceChart) { try { performanceChart.remove(); } catch(e) {} performanceChart = null; }
 
+  const now = Math.floor(Date.now() / 1000);
+  const oneYearAgo = now - 365 * 24 * 3600;
+
+  // Fetch SPY (benchmark) candles
+  let spyPriceData = await fetchCandleDataSafe('SPY', oneYearAgo, now);
+
+  // Build a simple weighted portfolio return using candles from each holding
+  // This is simpler and more robust than trying to reconstruct historical NAV
+  let portfolioReturnData = null;
+  if (!demoMode) {
+    // Use the largest holdings (up to 8) to approximate portfolio performance
+    const mainHoldings = [...portfolio.holdings]
+      .sort((a, b) => b.allocation - a.allocation)
+      .slice(0, 8);
+
+    const holdingCandles = {};
+    for (const h of mainHoldings) {
+      const candles = await fetchCandleDataSafe(h.ticker, oneYearAgo, now);
+      if (candles && candles.length > 5) {
+        holdingCandles[h.ticker] = candles;
+      }
+    }
+
+    // Build a date-aligned weighted return
+    if (Object.keys(holdingCandles).length > 0) {
+      // Find common dates (dates where ALL contributing holdings have data)
+      const dateSets = Object.values(holdingCandles).map(c => new Set(c.map(d => d.time)));
+      let commonDates = [...dateSets[0]];
+      for (let i = 1; i < dateSets.length; i++) {
+        commonDates = commonDates.filter(d => dateSets[i].has(d));
+      }
+      commonDates.sort();
+
+      if (commonDates.length > 5) {
+        // Normalize allocations for the holdings we actually have data for
+        const totalAlloc = mainHoldings
+          .filter(h => holdingCandles[h.ticker])
+          .reduce((sum, h) => sum + h.allocation, 0);
+
+        portfolioReturnData = commonDates.map(date => {
+          let weightedReturn = 0;
+          for (const h of mainHoldings) {
+            if (!holdingCandles[h.ticker]) continue;
+            const candles = holdingCandles[h.ticker];
+            const firstPrice = candles[0].value;
+            const point = candles.find(c => c.time === date);
+            if (point && firstPrice > 0) {
+              const weight = h.allocation / totalAlloc;
+              const ret = ((point.value / firstPrice) - 1) * 100;
+              weightedReturn += weight * ret;
+            }
+          }
+          return { time: date, value: parseFloat(weightedReturn.toFixed(2)) };
+        });
+      }
+    }
+  }
+
+  // Fallback to deterministic data if no real data available
+  const inceptionDate = portfolio.fund.inceptionDate || '2026-04-09';
+  if (!portfolioReturnData) {
+    portfolioReturnData = generateDeterministicPerformance(42, 0.0007, 0.015, inceptionDate);
+  }
+  let spyReturnData;
+  if (spyPriceData) {
+    spyReturnData = pricesToReturns(spyPriceData);
+  } else {
+    spyReturnData = generateDeterministicPerformance(123, 0.0004, 0.012, inceptionDate);
+  }
+
+  container.innerHTML = '';
   const chart = createChart(container, {
     width: container.clientWidth || 800, height: 400,
     layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: '#94a3b8', fontFamily: "'Inter', sans-serif", fontSize: 11 },
@@ -863,41 +1146,14 @@ function renderPerformanceChart() {
     handleScroll: true, handleScale: true,
   });
 
-  // Find the earliest holding addedDate as fund inception
-  const holdingDates = portfolio.holdings
-    .map(h => h.addedDate)
-    .filter(d => d)
-    .sort();
-  const inceptionDate = holdingDates.length > 0 ? holdingDates[0] : (portfolio.fund.inceptionDate || '2026-04-09');
-
-  const lfnfData = generateDeterministicPerformance(42, 0.0007, 0.015, inceptionDate);
-  const spyData = generateDeterministicPerformance(123, 0.0004, 0.012, inceptionDate);
-
-  const lfnfSeries = chart.addSeries(AreaSeries, { lineColor: '#3b82f6', topColor: 'rgba(59,130,246,0.20)', bottomColor: 'rgba(59,130,246,0.02)', lineWidth: 2, priceFormat: { type: 'percent' } });
-  lfnfSeries.setData(lfnfData);
-
-  const spySeries = chart.addSeries(LineSeries, { color: 'rgba(245,158,11,0.6)', lineWidth: 1.5, lineStyle: LineStyle.Dashed, priceFormat: { type: 'percent' } });
-  spySeries.setData(spyData);
-
-  // Add markers for when holdings were added (group by date)
-  const holdingsByDate = {};
-  for (const h of portfolio.holdings) {
-    const d = h.addedDate || inceptionDate;
-    if (!holdingsByDate[d]) holdingsByDate[d] = [];
-    holdingsByDate[d].push(h.ticker);
+  if (portfolioReturnData.length > 0) {
+    const lfnfSeries = chart.addSeries(AreaSeries, { lineColor: '#3b82f6', topColor: 'rgba(59,130,246,0.20)', bottomColor: 'rgba(59,130,246,0.02)', lineWidth: 2, priceFormat: { type: 'percent' } });
+    lfnfSeries.setData(portfolioReturnData);
   }
-  const markers = Object.entries(holdingsByDate)
-    .filter(([date]) => date >= inceptionDate)
-    .map(([date, tickers]) => ({
-      time: date,
-      position: 'belowBar',
-      color: '#f59e0b',
-      shape: 'arrowUp',
-      text: tickers.length <= 3 ? tickers.join(', ') : `${tickers.slice(0,3).join(', ')} +${tickers.length-3}`,
-      size: 1,
-    }));
-  if (markers.length > 0) {
-    try { lfnfSeries.setMarkers(markers); } catch(e) { /* markers not supported in this version */ }
+
+  if (spyReturnData.length > 0) {
+    const spySeries = chart.addSeries(LineSeries, { color: 'rgba(245,158,11,0.6)', lineWidth: 1.5, lineStyle: LineStyle.Dashed, priceFormat: { type: 'percent' } });
+    spySeries.setData(spyReturnData);
   }
 
   chart.timeScale().fitContent();
@@ -909,16 +1165,46 @@ function renderPerformanceChart() {
 
 /**
  * Render all holdings performance lines on a single chart.
- * Each holding starts from its addedDate, showing % return normalized to 0%.
+ * Each holding uses real candle data when available, starting from its earliest data point.
+ * All lines are normalized to % return (starting at 0%).
  */
-function renderAllHoldingsPerfChart() {
+async function renderAllHoldingsPerfChart() {
   const container = document.getElementById('all-holdings-perf-container');
   const legendEl = document.getElementById('all-holdings-perf-legend');
   if (!container) return;
 
-  container.innerHTML = '';
+  container.innerHTML = '<div class="empty-state"><div class="spinner"></div><p class="text-tertiary" style="margin-top:var(--space-sm);">Cargando rendimiento por holding...</p></div>';
   if (allHoldingsPerfChart) { try { allHoldingsPerfChart.remove(); } catch(e) {} allHoldingsPerfChart = null; }
 
+  const now = Math.floor(Date.now() / 1000);
+  // Look back up to 5 years for the oldest holdings
+  const fiveYearsAgo = now - 5 * 365 * 24 * 3600;
+
+  const inceptionDate = portfolio.fund.inceptionDate || '2026-04-09';
+  const sorted = [...portfolio.holdings].sort((a, b) => b.allocation - a.allocation);
+
+  // Fetch candle data for all holdings
+  const holdingCandleData = [];
+  for (const h of sorted) {
+    let returnData = null;
+    if (!demoMode) {
+      const priceData = await fetchCandleDataSafe(h.ticker, fiveYearsAgo, now);
+      if (priceData && priceData.length > 2) {
+        returnData = pricesToReturns(priceData);
+      }
+    }
+    // Fall back to deterministic data
+    if (!returnData) {
+      const startDate = h.addedDate || inceptionDate;
+      const seed = h.ticker.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+      const enriched = enrichedHoldings.find(eh => eh.ticker === h.ticker);
+      const dailyReturn = (enriched?.changePercent || 0) * 0.0001 + 0.0003;
+      returnData = generateDeterministicPerformance(seed, dailyReturn, 0.018, startDate);
+    }
+    holdingCandleData.push({ holding: h, data: returnData });
+  }
+
+  container.innerHTML = '';
   const chart = createChart(container, {
     width: container.clientWidth || 800, height: 350,
     layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: '#94a3b8', fontFamily: "'Inter', sans-serif", fontSize: 11 },
@@ -929,33 +1215,21 @@ function renderAllHoldingsPerfChart() {
     handleScroll: true, handleScale: true,
   });
 
-  const inceptionDate = portfolio.fund.inceptionDate || '2026-04-09';
-  const sorted = [...portfolio.holdings].sort((a, b) => (a.addedDate || inceptionDate).localeCompare(b.addedDate || inceptionDate));
-
-  // Generate a line for each holding
   const legendParts = [];
-  sorted.forEach((h, i) => {
+  holdingCandleData.forEach(({ holding, data }, i) => {
+    if (!data || data.length === 0) return;
     const color = HOLDING_COLORS[i % HOLDING_COLORS.length];
-    const startDate = h.addedDate || inceptionDate;
-    const seed = h.ticker.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-    const enriched = enrichedHoldings.find(eh => eh.ticker === h.ticker);
-    const dailyReturn = (enriched?.changePercent || 0) * 0.0001 + 0.0003;
-    const volatility = 0.018;
-
-    const data = generateDeterministicPerformance(seed, dailyReturn, volatility, startDate);
-
     const series = chart.addSeries(LineSeries, {
-      color: color,
+      color,
       lineWidth: 1.5,
       priceFormat: { type: 'percent' },
       lastValueVisible: false,
       priceLineVisible: false,
     });
     series.setData(data);
-
     legendParts.push(`<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;background:var(--bg-surface);border-radius:var(--radius-sm);border:1px solid var(--border-subtle);font-size:var(--text-xs);">
       <div style="width:10px;height:3px;background:${color};border-radius:2px;"></div>
-      <span class="font-bold">${escHtml(h.ticker)}</span>
+      <span class="font-bold">${escHtml(holding.ticker)}</span>
     </div>`);
   });
 
@@ -1504,6 +1778,80 @@ const DEMO_SYMBOLS = [
   { symbol: 'BTI', description: 'British American Tobacco plc', type: 'Common Stock' },
   { symbol: 'ARM', description: 'Arm Holdings plc', type: 'Common Stock' },
   { symbol: 'SWK', description: 'Stanley Black & Decker, Inc.', type: 'Common Stock' },
+  // Additional popular ETFs
+  { symbol: 'ECH', description: 'iShares MSCI Chile ETF', type: 'ETP' },
+  { symbol: 'SCHB', description: 'Schwab U.S. Broad Market ETF', type: 'ETP' },
+  { symbol: 'SCHA', description: 'Schwab U.S. Small-Cap ETF', type: 'ETP' },
+  { symbol: 'SCHF', description: 'Schwab International Equity ETF', type: 'ETP' },
+  { symbol: 'SCHX', description: 'Schwab U.S. Large-Cap ETF', type: 'ETP' },
+  { symbol: 'SCHG', description: 'Schwab U.S. Large-Cap Growth ETF', type: 'ETP' },
+  { symbol: 'VB', description: 'Vanguard Small-Cap ETF', type: 'ETP' },
+  { symbol: 'VO', description: 'Vanguard Mid-Cap ETF', type: 'ETP' },
+  { symbol: 'VTV', description: 'Vanguard Value ETF', type: 'ETP' },
+  { symbol: 'VUG', description: 'Vanguard Growth ETF', type: 'ETP' },
+  { symbol: 'VTIP', description: 'Vanguard Short-Term Inflation-Protected Securities ETF', type: 'ETP' },
+  { symbol: 'RSP', description: 'Invesco S&P 500 Equal Weight ETF', type: 'ETP' },
+  { symbol: 'SPLG', description: 'SPDR Portfolio S&P 500 ETF', type: 'ETP' },
+  { symbol: 'MGK', description: 'Vanguard Mega Cap Growth ETF', type: 'ETP' },
+  { symbol: 'VONG', description: 'Vanguard Russell 1000 Growth ETF', type: 'ETP' },
+  { symbol: 'VONV', description: 'Vanguard Russell 1000 Value ETF', type: 'ETP' },
+  { symbol: 'XBI', description: 'SPDR S&P Biotech ETF', type: 'ETP' },
+  { symbol: 'IBB', description: 'iShares Biotechnology ETF', type: 'ETP' },
+  { symbol: 'EWW', description: 'iShares MSCI Mexico ETF', type: 'ETP' },
+  { symbol: 'EWY', description: 'iShares MSCI South Korea ETF', type: 'ETP' },
+  { symbol: 'EWG', description: 'iShares MSCI Germany ETF', type: 'ETP' },
+  { symbol: 'EWU', description: 'iShares MSCI United Kingdom ETF', type: 'ETP' },
+  { symbol: 'EWA', description: 'iShares MSCI Australia ETF', type: 'ETP' },
+  { symbol: 'EWC', description: 'iShares MSCI Canada ETF', type: 'ETP' },
+  { symbol: 'THD', description: 'iShares MSCI Thailand ETF', type: 'ETP' },
+  { symbol: 'EIDO', description: 'iShares MSCI Indonesia ETF', type: 'ETP' },
+  { symbol: 'EPU', description: 'iShares MSCI Peru ETF', type: 'ETP' },
+  { symbol: 'ARGT', description: 'Global X MSCI Argentina ETF', type: 'ETP' },
+  { symbol: 'GXG', description: 'Global X MSCI Colombia ETF', type: 'ETP' },
+  { symbol: 'ILF', description: 'iShares Latin America 40 ETF', type: 'ETP' },
+  { symbol: 'FM', description: 'iShares MSCI Frontier and Select EM ETF', type: 'ETP' },
+  { symbol: 'GOVT', description: 'iShares U.S. Treasury Bond ETF', type: 'ETP' },
+  { symbol: 'SHY', description: 'iShares 1-3 Year Treasury Bond ETF', type: 'ETP' },
+  { symbol: 'IEF', description: 'iShares 7-10 Year Treasury Bond ETF', type: 'ETP' },
+  { symbol: 'EMB', description: 'iShares J.P. Morgan USD Emerging Markets Bond ETF', type: 'ETP' },
+  { symbol: 'PFF', description: 'iShares Preferred and Income Securities ETF', type: 'ETP' },
+  { symbol: 'VNQI', description: 'Vanguard Global ex-U.S. Real Estate ETF', type: 'ETP' },
+  { symbol: 'PDBC', description: 'Invesco Optimum Yield Diversified Commodity Strategy ETF', type: 'ETP' },
+  { symbol: 'GSG', description: 'iShares S&P GSCI Commodity-Indexed Trust', type: 'ETP' },
+  { symbol: 'COPX', description: 'Global X Copper Miners ETF', type: 'ETP' },
+  { symbol: 'LIT', description: 'Global X Lithium & Battery Tech ETF', type: 'ETP' },
+  { symbol: 'REMX', description: 'VanEck Rare Earth/Strategic Metals ETF', type: 'ETP' },
+  { symbol: 'URA', description: 'Global X Uranium ETF', type: 'ETP' },
+  { symbol: 'QCLN', description: 'First Trust NASDAQ Clean Edge Green Energy ETF', type: 'ETP' },
+  { symbol: 'DRIV', description: 'Global X Autonomous & Electric Vehicles ETF', type: 'ETP' },
+  { symbol: 'MTUM', description: 'iShares MSCI USA Momentum Factor ETF', type: 'ETP' },
+  { symbol: 'QUAL', description: 'iShares MSCI USA Quality Factor ETF', type: 'ETP' },
+  { symbol: 'VLUE', description: 'iShares MSCI USA Value Factor ETF', type: 'ETP' },
+  { symbol: 'SIZE', description: 'iShares MSCI USA Size Factor ETF', type: 'ETP' },
+  { symbol: 'USMV', description: 'iShares MSCI USA Min Vol Factor ETF', type: 'ETP' },
+  // Additional popular stocks
+  { symbol: 'BRK.B', description: 'Berkshire Hathaway Inc. Class B', type: 'Common Stock' },
+  { symbol: 'WM', description: 'Waste Management, Inc.', type: 'Common Stock' },
+  { symbol: 'AXP', description: 'American Express Company', type: 'Common Stock' },
+  { symbol: 'BKNG', description: 'Booking Holdings Inc.', type: 'Common Stock' },
+  { symbol: 'NOW', description: 'ServiceNow, Inc.', type: 'Common Stock' },
+  { symbol: 'VRTX', description: 'Vertex Pharmaceuticals Inc.', type: 'Common Stock' },
+  { symbol: 'REGN', description: 'Regeneron Pharmaceuticals, Inc.', type: 'Common Stock' },
+  { symbol: 'GILD', description: 'Gilead Sciences, Inc.', type: 'Common Stock' },
+  { symbol: 'PXD', description: 'Pioneer Natural Resources Company', type: 'Common Stock' },
+  { symbol: 'SLB', description: 'Schlumberger Limited', type: 'Common Stock' },
+  { symbol: 'CVX', description: 'Chevron Corporation', type: 'Common Stock' },
+  { symbol: 'COP', description: 'ConocoPhillips', type: 'Common Stock' },
+  { symbol: 'EOG', description: 'EOG Resources, Inc.', type: 'Common Stock' },
+  { symbol: 'SPGI', description: 'S&P Global Inc.', type: 'Common Stock' },
+  { symbol: 'MCO', description: 'Moody\'s Corporation', type: 'Common Stock' },
+  { symbol: 'ICE', description: 'Intercontinental Exchange, Inc.', type: 'Common Stock' },
+  { symbol: 'CB', description: 'Chubb Limited', type: 'Common Stock' },
+  { symbol: 'CI', description: 'Cigna Group', type: 'Common Stock' },
+  { symbol: 'HUM', description: 'Humana Inc.', type: 'Common Stock' },
+  { symbol: 'ELV', description: 'Elevance Health, Inc.', type: 'Common Stock' },
+  { symbol: 'LOW', description: 'Lowe\'s Companies, Inc.', type: 'Common Stock' },
+  { symbol: 'TJX', description: 'The TJX Companies, Inc.', type: 'Common Stock' },
 ];
 
 const SECTOR_LOOKUP = {
@@ -1715,6 +2063,39 @@ function mapFinnhubType(type) {
 }
 
 /**
+ * Map a Finnhub industry string to one of our sector categories.
+ * @param {string} industry - Finnhub finnhubIndustry field
+ * @returns {string|null}
+ */
+function mapIndustryToSector(industry) {
+  if (!industry) return null;
+  const lower = industry.toLowerCase();
+  if (lower.includes('technology') || lower.includes('software') || lower.includes('semiconductor') ||
+      lower.includes('internet') || lower.includes('computer') || lower.includes('data processing') ||
+      lower.includes('electronic') || lower.includes('edp ')) return 'Technology';
+  if (lower.includes('health') || lower.includes('pharma') || lower.includes('biotech') ||
+      lower.includes('medical') || lower.includes('hospital') || lower.includes('nursing')) return 'Healthcare';
+  if (lower.includes('financ') || lower.includes('bank') || lower.includes('insurance') ||
+      lower.includes('investment') || lower.includes('real estate')) return 'Financials';
+  if (lower.includes('aerospace') || lower.includes('defense')) return 'Aerospace & Defense';
+  if (lower.includes('energy') || lower.includes('oil') || lower.includes('coal') ||
+      lower.includes('oilfield')) return 'Energy';
+  if (lower.includes('telecom') || lower.includes('wireless')) return 'Telecom';
+  if (lower.includes('chemical') || lower.includes('steel') || lower.includes('aluminum') ||
+      lower.includes('mineral') || lower.includes('metal') || lower.includes('forest') ||
+      lower.includes('precious') || lower.includes('construction material') || lower.includes('container') ||
+      lower.includes('packaging') || lower.includes('industrial special')) return 'Materials';
+  if (lower.includes('food') || lower.includes('beverage') || lower.includes('household') ||
+      lower.includes('personal care') || lower.includes('tobacco') || lower.includes('consumer non-durable')) return 'Consumer Staples';
+  if (lower.includes('consumer') || lower.includes('retail') || lower.includes('apparel') ||
+      lower.includes('restaurant') || lower.includes('hotel') || lower.includes('entertainment') ||
+      lower.includes('broadcasting') || lower.includes('cable') || lower.includes('motor') ||
+      lower.includes('homebuilding') || lower.includes('recreational') || lower.includes('home furnish') ||
+      lower.includes('movies')) return 'Consumer Discretionary';
+  return 'Other';
+}
+
+/**
  * Initialize a symbol search autocomplete widget.
  * @param {string} searchId - ID of the search input element
  * @param {string} resultsId - ID of the results dropdown element
@@ -1752,13 +2133,24 @@ function initSymbolSearch(searchId, resultsId, chipId, tickerHiddenId, nameHidde
     searchEl.value = '';
     resultsEl.style.display = 'none';
 
-    // Auto-set sector if we have a lookup
+    // Auto-set sector: first check static lookup, then try Finnhub profile API
+    const setupSector = document.getElementById('setup-holding-sector');
+    const addSector = document.getElementById('add-sector');
     const sectorLookup = SECTOR_LOOKUP[ticker];
     if (sectorLookup) {
-      const setupSector = document.getElementById('setup-holding-sector');
-      const addSector = document.getElementById('add-sector');
       if (setupSector) setupSector.value = sectorLookup;
       if (addSector) addSector.value = sectorLookup;
+    } else if (!demoMode && type !== 'ETF') {
+      // Fetch sector from Finnhub profile dynamically
+      getCompanyProfile(ticker).then(profile => {
+        if (profile && profile.finnhubIndustry) {
+          const mapped = mapIndustryToSector(profile.finnhubIndustry);
+          if (mapped) {
+            if (setupSector) setupSector.value = mapped;
+            if (addSector) addSector.value = mapped;
+          }
+        }
+      }).catch(() => { /* ignore */ });
     }
 
     chipEl.querySelector('.chip-clear').addEventListener('click', () => {
@@ -1872,9 +2264,9 @@ function switchTab(tabName) {
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById(`tab-${tabName}`)?.classList.add('active');
   if (tabName === 'performance') {
-    setTimeout(() => {
-      try { renderPerformanceChart(); } catch(e) {}
-      try { renderAllHoldingsPerfChart(); } catch(e) {}
+    setTimeout(async () => {
+      try { await renderPerformanceChart(); } catch(e) {}
+      try { await renderAllHoldingsPerfChart(); } catch(e) {}
       renderHoldingPerfSelector();
     }, 50);
   }
@@ -2128,7 +2520,8 @@ function initModals() {
     const type = document.getElementById('add-type').value || 'Stock';
     const rawValue = parseFloat(document.getElementById('add-allocation').value);
     const inputMode = document.getElementById('add-input-mode').value;
-    const sector = document.getElementById('add-sector').value;
+    const sectorRaw = document.getElementById('add-sector').value;
+    const sector = (sectorRaw === 'Auto') ? (SECTOR_LOOKUP[ticker] || 'Other') : sectorRaw;
     const notes = document.getElementById('add-notes').value.trim();
 
     if (!ticker || !name || isNaN(rawValue) || rawValue <= 0) {
