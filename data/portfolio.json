@@ -55,13 +55,13 @@
     },
     {
       "ticker": "AVEM",
-      "name": "Avantis International Small Cap Value ETF",
+      "name": "Avantis Emerging Markets Equity ETF",
       "shortName": "AVEM",
       "type": "ETF",
       "allocation": 3.9,
       "sector": "Emerging Markets",
       "addedDate": "2026-04-09",
-      "officialUrl": "https://www.avantisinvestors.com/avantis-investments/avantis-international-equity-etf/",
+      "officialUrl": "https://www.avantisinvestors.com/avantis-investments/avantis-emerging-markets-equity-etf/",
       "notes": "Emerging markets diversification"
     },
     {
@@ -134,7 +134,7 @@
       "ticker": "KKR",
       "name": "KKR & Co. Inc.",
       "shortName": "KKR",
-      "type": "Stock",
+      "type": "Fund",
       "allocation": 2.0,
       "sector": "Financials",
       "addedDate": "2026-04-09",

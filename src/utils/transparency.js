@@ -51,8 +51,8 @@ export function decomposePortfolio(holdings) {
           });
         }
       }
-    } else if (holding.type === 'Stock') {
-      // Direct holding
+    } else if (holding.type === 'Stock' || holding.type === 'Fund') {
+      // Direct holding (stocks and funds/investment companies)
       const key = normalizeTickerKey(holding.ticker);
 
       if (consolidated.has(key)) {

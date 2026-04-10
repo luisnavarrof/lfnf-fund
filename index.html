@@ -67,20 +67,21 @@
         <!-- Step 3: Add Holdings -->
         <div id="setup-step-3" class="setup-step-content" style="display:none;">
           <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 8px; padding: var(--space-md); margin-bottom: var(--space-md);">
-            <div style="display:grid; grid-template-columns: 1fr 2fr; gap: var(--space-sm); margin-bottom: var(--space-sm);">
-              <div class="form-group"><label class="form-label">Ticker</label><input type="text" id="setup-holding-ticker" class="form-input" placeholder="Ej: AAPL" style="text-transform: uppercase;"></div>
-              <div class="form-group"><label class="form-label">Nombre / Empresa</label><input type="text" id="setup-holding-name" class="form-input" placeholder="Ej: Apple Inc."></div>
-            </div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-sm); margin-bottom: var(--space-md);">
-              <div class="form-group"><label class="form-label">Tipo</label>
-                <select id="setup-holding-type" class="form-input">
-                  <option value="ETF">ETF</option>
-                  <option value="Stock">Acción</option>
-                </select>
+            <div class="form-group" style="margin-bottom:var(--space-sm);">
+              <label class="form-label">Buscar Acción / ETF / Fondo</label>
+              <div class="symbol-search-wrapper">
+                <input type="text" id="setup-symbol-search" class="form-input" placeholder="Escribe ticker o nombre (ej: AAPL, Apple...)" autocomplete="off" />
+                <div id="setup-symbol-results" class="symbol-search-results" style="display:none;"></div>
               </div>
+              <div id="setup-selected-symbol" class="selected-symbol-chip" style="display:none;"></div>
+              <input type="hidden" id="setup-holding-ticker" />
+              <input type="hidden" id="setup-holding-name" />
+              <input type="hidden" id="setup-holding-type" value="Stock" />
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); margin-bottom: var(--space-md);">
               <div class="form-group"><label class="form-label">Sector</label>
                 <select id="setup-holding-sector" class="form-input">
-                  <option value="Technology">Technology</option><option value="Financials">Financials</option><option value="Healthcare">Healthcare</option><option value="Consumer Discretionary">Consumer Discretionary</option><option value="Multi-Factor">Multi-Factor</option><option value="Other">Otro...</option>
+                  <option value="Technology">Technology</option><option value="Financials">Financials</option><option value="Healthcare">Healthcare</option><option value="Consumer Discretionary">Consumer Discretionary</option><option value="Multi-Factor">Multi-Factor</option><option value="Emerging Markets">Emerging Markets</option><option value="Aerospace & Defense">Aerospace &amp; Defense</option><option value="Energy">Energy</option><option value="Materials">Materials</option><option value="Telecom">Telecom</option><option value="Other">Otro...</option>
                 </select>
               </div>
               <div class="form-group"><label class="form-label">Peso (%)</label><input type="number" id="setup-holding-allocation" class="form-input" placeholder="Ej: 15.5" step="0.1" min="0" max="100"></div>
@@ -168,9 +169,18 @@
         <div class="summary-row" id="summary-row">
           <div class="summary-card animate-fade-in-up stagger-1">
             <div class="summary-card-icon blue">💰</div>
-            <div class="summary-card-label">Valor Total</div>
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: var(--space-xs);">
+              <div class="summary-card-label">Valor Total</div>
+              <button class="btn btn-ghost btn-icon" id="btn-edit-total" title="Editar valor base" style="width:22px;height:22px;font-size:0.7rem;border-radius:var(--radius-sm);">✏️</button>
+            </div>
             <div class="summary-card-value" id="total-value-clp">—</div>
             <div class="summary-card-sub" id="total-value-usd">—</div>
+            <div class="summary-card-sub" id="total-value-base" style="color:var(--text-muted);display:none;"></div>
+            <div id="total-edit-inline" class="total-edit-inline" style="display:none;">
+              <input type="text" id="total-edit-input" placeholder="Valor en CLP" />
+              <button class="btn btn-primary btn-sm" id="total-edit-save" style="white-space:nowrap;">✓</button>
+              <button class="btn btn-ghost btn-sm" id="total-edit-cancel">✕</button>
+            </div>
           </div>
           <div class="summary-card animate-fade-in-up stagger-2">
             <div class="summary-card-icon green">📈</div>
@@ -282,6 +292,7 @@
                 <button class="filter-chip active" data-filter="all">Todos</button>
                 <button class="filter-chip" data-filter="ETF">ETFs</button>
                 <button class="filter-chip" data-filter="Stock">Acciones</button>
+                <button class="filter-chip" data-filter="Fund">Fondos</button>
               </div>
               <button class="btn btn-primary btn-sm" id="btn-add-holding">+ Agregar</button>
             </div>
@@ -438,6 +449,32 @@
           </div>
         </div>
 
+        <!-- Individual Holding Performance -->
+        <div class="card" style="margin-bottom: var(--space-lg);">
+          <div class="card-header">
+            <h2 class="card-title">📈 Rendimiento por Holding</h2>
+            <div class="text-tertiary" style="font-size:var(--text-xs);">Precio histórico de cada activo • Línea vertical = fecha de ingreso al fondo</div>
+          </div>
+          <div class="card-body">
+            <div class="holding-perf-selector" id="holding-perf-selector"></div>
+            <div id="holding-perf-chart-container" style="height:320px; position:relative;">
+              <div class="empty-state" id="holding-perf-empty">
+                <div class="empty-state-icon">👆</div>
+                <p class="empty-state-text text-tertiary">Selecciona un holding arriba para ver su rendimiento</p>
+              </div>
+            </div>
+            <div id="holding-perf-info" style="display:none; margin-top:var(--space-md); padding:var(--space-md); background:var(--bg-surface); border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
+              <div style="display:flex; gap:var(--space-lg); flex-wrap:wrap;">
+                <div><div class="summary-card-label">Ticker</div><div class="font-mono font-bold" id="hp-ticker"></div></div>
+                <div><div class="summary-card-label">Fecha Ingreso</div><div class="font-mono" id="hp-added"></div></div>
+                <div><div class="summary-card-label">Precio Actual</div><div class="font-mono" id="hp-price"></div></div>
+                <div><div class="summary-card-label">Cambio Hoy</div><div class="font-mono font-bold" id="hp-change"></div></div>
+                <div><div class="summary-card-label">Asignación</div><div class="font-mono" id="hp-alloc"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Top Movers -->
         <div class="charts-row" style="grid-template-columns: 1fr 1fr;">
           <div class="card">
@@ -506,46 +543,41 @@
         <button class="modal-close" id="add-holding-close">✕</button>
       </div>
       <div class="modal-body">
+        <!-- Symbol Search -->
         <div class="form-group">
-          <label class="form-label">Ticker *</label>
-          <input type="text" class="form-input" id="add-ticker" placeholder="Ej: AAPL" style="text-transform: uppercase;" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Nombre Completo *</label>
-          <input type="text" class="form-input" id="add-name" placeholder="Ej: Apple Inc." />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Nombre Corto</label>
-          <input type="text" class="form-input" id="add-short-name" placeholder="Ej: Apple" />
+          <label class="form-label">Buscar Acción / ETF / Fondo *</label>
+          <div class="symbol-search-wrapper">
+            <input type="text" class="form-input" id="add-symbol-search" placeholder="Escribe el ticker o nombre (ej: AAPL, Apple...)" autocomplete="off" />
+            <div id="add-symbol-results" class="symbol-search-results" style="display:none;"></div>
+          </div>
+          <div id="add-selected-symbol" class="selected-symbol-chip" style="display:none;"></div>
+          <input type="hidden" id="add-ticker" />
+          <input type="hidden" id="add-name" />
+          <input type="hidden" id="add-short-name" />
+          <input type="hidden" id="add-type" value="Stock" />
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md);">
-          <div class="form-group">
-            <label class="form-label">Tipo *</label>
-            <select class="form-select" id="add-type">
-              <option value="Stock">Acción</option>
-              <option value="ETF">ETF</option>
-            </select>
-          </div>
           <div class="form-group">
             <label class="form-label">Asignación (%) *</label>
             <input type="number" class="form-input" id="add-allocation" step="0.1" min="0" max="100" placeholder="Ej: 5.0" />
           </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Sector</label>
-          <select class="form-select" id="add-sector">
-            <option value="Technology">Technology</option>
-            <option value="Healthcare">Healthcare</option>
-            <option value="Financials">Financials</option>
-            <option value="Consumer Discretionary">Consumer Discretionary</option>
-            <option value="Consumer Staples">Consumer Staples</option>
-            <option value="Energy">Energy</option>
-            <option value="Aerospace & Defense">Aerospace & Defense</option>
-            <option value="Emerging Markets">Emerging Markets</option>
-            <option value="Materials">Materials</option>
-            <option value="Telecom">Telecom</option>
-            <option value="Other">Other</option>
-          </select>
+          <div class="form-group">
+            <label class="form-label">Sector</label>
+            <select class="form-select" id="add-sector">
+              <option value="Technology">Technology</option>
+              <option value="Healthcare">Healthcare</option>
+              <option value="Financials">Financials</option>
+              <option value="Consumer Discretionary">Consumer Discretionary</option>
+              <option value="Consumer Staples">Consumer Staples</option>
+              <option value="Energy">Energy</option>
+              <option value="Aerospace & Defense">Aerospace & Defense</option>
+              <option value="Emerging Markets">Emerging Markets</option>
+              <option value="Multi-Factor">Multi-Factor</option>
+              <option value="Materials">Materials</option>
+              <option value="Telecom">Telecom</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">Notas</label>

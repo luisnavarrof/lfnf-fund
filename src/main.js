@@ -15,7 +15,7 @@ import { createChart, ColorType, LineStyle, AreaSeries, LineSeries } from 'light
 
 // Modules
 import defaultPortfolioData from '../data/portfolio.json';
-import { hasApiKey, setApiKey, validateApiKey, getBatchQuotes, getPortfolioNews } from './api/finnhub.js';
+import { hasApiKey, setApiKey, validateApiKey, getBatchQuotes, getPortfolioNews, searchSymbols, getCandles } from './api/finnhub.js';
 import { getUsdClpRate } from './api/exchange.js';
 import { Cache } from './api/cache.js';
 import {
@@ -51,6 +51,8 @@ let sectorChart = null;
 let sectorDetailChart = null;
 let performanceChart = null;
 let contributionChartInstance = null;
+let holdingPerfChart = null;
+let selectedHoldingPerfTicker = null;
 
 // ============================================
 // DEMO DATA
@@ -130,6 +132,18 @@ document.addEventListener('DOMContentLoaded', () => {
   initTransparencyInteractions();
 });
 
+// ============================================
+// UTILITIES
+// ============================================
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 // Temporary holdings list for onboarding wizard step 3
 let setupHoldings = [];
 
@@ -191,15 +205,24 @@ function initSetup() {
     if (e.key === 'Enter') document.getElementById('setup-connect-btn').click();
   });
 
-  // Step 3: Add holdings
+  // Step 3: Add holdings (via symbol search)
+  initSymbolSearch(
+    'setup-symbol-search',
+    'setup-symbol-results',
+    'setup-selected-symbol',
+    'setup-holding-ticker',
+    'setup-holding-name',
+    'setup-holding-type'
+  );
+
   document.getElementById('setup-add-holding-btn').addEventListener('click', () => {
     const ticker = document.getElementById('setup-holding-ticker').value.trim().toUpperCase();
     const name = document.getElementById('setup-holding-name').value.trim();
-    const type = document.getElementById('setup-holding-type').value;
+    const type = document.getElementById('setup-holding-type').value || 'Stock';
     const allocation = parseFloat(document.getElementById('setup-holding-allocation').value);
     const sector = document.getElementById('setup-holding-sector').value;
     if (!ticker || !name || isNaN(allocation) || allocation <= 0) {
-      showToast('❌ Completa ticker, nombre y % válido', 'error');
+      showToast('❌ Selecciona un activo y escribe un % válido', 'error');
       return;
     }
     if (setupHoldings.some(h => h.ticker === ticker)) {
@@ -208,11 +231,14 @@ function initSetup() {
     }
     setupHoldings.push({ ticker, name, shortName: ticker, type, allocation, sector });
     renderSetupHoldingsList();
-    // Clear inputs
+    // Clear search
+    document.getElementById('setup-symbol-search').value = '';
     document.getElementById('setup-holding-ticker').value = '';
     document.getElementById('setup-holding-name').value = '';
+    document.getElementById('setup-holding-type').value = 'Stock';
+    document.getElementById('setup-selected-symbol').style.display = 'none';
     document.getElementById('setup-holding-allocation').value = '';
-    document.getElementById('setup-holding-ticker').focus();
+    document.getElementById('setup-holding-allocation').focus();
   });
 
   // Step 3: Finish
@@ -255,9 +281,9 @@ function renderSetupHoldingsList() {
   list.innerHTML = setupHoldings.map((h, i) => `
     <div style="display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border-subtle);">
       <div style="display:flex; align-items:center; gap:var(--space-sm);">
-        <span class="badge ${h.type === 'ETF' ? 'badge-etf' : 'badge-stock'}">${h.type}</span>
-        <span class="font-bold" style="font-size:var(--text-sm);">${h.ticker}</span>
-        <span class="text-tertiary" style="font-size:var(--text-xs);">${h.name}</span>
+        <span class="badge ${h.type === 'ETF' ? 'badge-etf' : h.type === 'Fund' ? 'badge-fund' : 'badge-stock'}">${escHtml(h.type)}</span>
+        <span class="font-bold" style="font-size:var(--text-sm);">${escHtml(h.ticker)}</span>
+        <span class="text-tertiary" style="font-size:var(--text-xs);">${escHtml(h.name)}</span>
       </div>
       <div style="display:flex; align-items:center; gap:var(--space-sm);">
         <span class="font-mono font-bold" style="font-size:var(--text-sm);">${h.allocation.toFixed(1)}%</span>
@@ -388,8 +414,18 @@ function updateStatus(status, text) {
 // ============================================
 function renderSummaryCards() {
   if (!summary) return;
-  animateValue('total-value-clp', formatCLP(summary.totalCLP));
-  document.getElementById('total-value-usd').textContent = `≈ ${formatUSD(summary.totalUSD)}`;
+  const liveTotal = summary.liveTotalCLP;
+  const liveTotalUSD = summary.liveTotalUSD;
+  animateValue('total-value-clp', formatCLP(liveTotal));
+  document.getElementById('total-value-usd').textContent = `≈ ${formatUSD(liveTotalUSD)}`;
+  // Show base value if it differs from live total
+  const baseEl = document.getElementById('total-value-base');
+  if (Math.abs(liveTotal - summary.totalCLP) > 1) {
+    baseEl.textContent = `Base: ${formatCLP(summary.totalCLP)}`;
+    baseEl.style.display = '';
+  } else {
+    baseEl.style.display = 'none';
+  }
 
   const changeEl = document.getElementById('daily-change');
   changeEl.textContent = formatPercent(summary.dailyChangePercent);
@@ -398,7 +434,10 @@ function renderSummaryCards() {
   document.getElementById('daily-change-clp').className = `summary-card-sub ${gainLossClass(summary.dailyChangeCLP)}`;
 
   document.getElementById('holdings-count').textContent = summary.holdingsCount;
-  document.getElementById('holdings-breakdown').textContent = `${summary.etfCount} ETFs • ${summary.stockCount} Acciones`;
+  const fundCount = enrichedHoldings.filter(h => h.type === 'Fund').length;
+  const parts = [`${summary.etfCount} ETFs`, `${summary.stockCount} Acciones`];
+  if (fundCount > 0) parts.push(`${fundCount} Fondos`);
+  document.getElementById('holdings-breakdown').textContent = parts.join(' • ');
   updateExchangeRate();
 }
 
@@ -502,9 +541,11 @@ function createHoldingRow(h, showSector) {
   const allocationWidth = Math.min(h.allocation * 2, 100);
   const sectorCell = showSector ? `<td><span class="badge badge-sector">${h.sector}</span></td>` : '';
   const actionsCell = showSector ? `<td style="text-align:center;"><div style="display:flex;gap:4px;justify-content:center;"><button class="btn btn-ghost btn-icon holding-edit-btn" data-ticker="${h.ticker}" title="Editar" style="font-size:0.75rem;width:28px;height:28px;">✏️</button><button class="btn btn-ghost btn-icon holding-delete-btn" data-ticker="${h.ticker}" title="Eliminar" style="font-size:0.75rem;width:28px;height:28px;color:var(--color-loss);">🗑</button></div></td>` : '';
+  const typeClass = h.type === 'ETF' ? 'etf' : h.type === 'Fund' ? 'fund' : 'stock';
+  const badgeClass = h.type === 'ETF' ? 'badge-etf' : h.type === 'Fund' ? 'badge-fund' : 'badge-stock';
   return `
     <tr data-ticker="${h.ticker}">
-      <td><div class="holding-name-cell"><div class="holding-ticker-icon ${h.type.toLowerCase()}">${h.ticker.substring(0, 2)}</div><div class="holding-info"><span class="holding-ticker">${h.ticker}</span><span class="holding-full-name">${h.name}</span></div></div></td>
+      <td><div class="holding-name-cell"><div class="holding-ticker-icon ${typeClass}">${h.ticker.substring(0, 2)}</div><div class="holding-info"><span class="holding-ticker">${h.ticker}</span><span class="holding-full-name">${h.name}</span></div></div></td>
       <td><span class="holding-price">${priceDisplay}</span></td>
       <td><span class="holding-change ${changeClass}">${changeDisplay}</span></td>
       ${sectorCell}
@@ -702,6 +743,7 @@ function renderPerformanceTab() {
   try { renderPerformanceChart(); } catch(e) { console.warn('Perf chart:', e); }
   renderContributionChart();
   renderTopMovers();
+  renderHoldingPerfSelector();
 }
 
 // Seeded PRNG for deterministic performance data
@@ -728,15 +770,37 @@ function renderPerformanceChart() {
     handleScroll: true, handleScale: true,
   });
 
-  // Full history from Jan 2019 to today — deterministic
-  const lfnfData = generateDeterministicPerformance(42, 0.0007, 0.015);
-  const spyData = generateDeterministicPerformance(123, 0.0004, 0.012);
+  // Start from fund inception date
+  const inceptionDate = portfolio.fund.inceptionDate || '2026-04-09';
+  const lfnfData = generateDeterministicPerformance(42, 0.0007, 0.015, inceptionDate);
+  const spyData = generateDeterministicPerformance(123, 0.0004, 0.012, inceptionDate);
 
   const lfnfSeries = chart.addSeries(AreaSeries, { lineColor: '#3b82f6', topColor: 'rgba(59,130,246,0.20)', bottomColor: 'rgba(59,130,246,0.02)', lineWidth: 2, priceFormat: { type: 'percent' } });
   lfnfSeries.setData(lfnfData);
 
   const spySeries = chart.addSeries(LineSeries, { color: 'rgba(245,158,11,0.6)', lineWidth: 1.5, lineStyle: LineStyle.Dashed, priceFormat: { type: 'percent' } });
   spySeries.setData(spyData);
+
+  // Add markers for when holdings were added (group by date)
+  const holdingsByDate = {};
+  for (const h of portfolio.holdings) {
+    const d = h.addedDate || inceptionDate;
+    if (!holdingsByDate[d]) holdingsByDate[d] = [];
+    holdingsByDate[d].push(h.ticker);
+  }
+  const markers = Object.entries(holdingsByDate)
+    .filter(([date]) => date >= inceptionDate)
+    .map(([date, tickers]) => ({
+      time: date,
+      position: 'belowBar',
+      color: '#f59e0b',
+      shape: 'arrowUp',
+      text: tickers.length <= 3 ? tickers.join(', ') : `${tickers.slice(0,3).join(', ')} +${tickers.length-3}`,
+      size: 1,
+    }));
+  if (markers.length > 0) {
+    try { lfnfSeries.setMarkers(markers); } catch(e) { /* markers not supported in this version */ }
+  }
 
   chart.timeScale().fitContent();
   performanceChart = chart;
@@ -745,23 +809,27 @@ function renderPerformanceChart() {
   resizeObserver.observe(container);
 }
 
-function generateDeterministicPerformance(seed, dailyReturn, volatility) {
+function generateDeterministicPerformance(seed, dailyReturn, volatility, startDateStr) {
   const rng = seededRandom(seed);
   const data = [];
   let value = 100;
-  const start = new Date('2019-01-02');
+  const start = startDateStr ? new Date(startDateStr) : new Date('2019-01-02');
   const now = new Date();
 
   for (let d = new Date(start); d <= now; d.setDate(d.getDate() + 1)) {
     if (d.getDay() === 0 || d.getDay() === 6) continue;
     const change = dailyReturn + (rng() - 0.48) * 2 * volatility;
     value *= (1 + change);
-    // Simulate COVID crash (March 2020)
     const m = d.getMonth(), y = d.getFullYear();
-    if (y === 2020 && m === 2) value *= (1 - rng() * 0.025);
-    if (y === 2020 && m === 3) value *= (1 + rng() * 0.02);
-    // Simulate 2022 bear
-    if (y === 2022 && m >= 0 && m <= 5) value *= (1 - rng() * 0.003);
+    // Simulate COVID crash (March 2020) — only relevant if fund started before this period
+    if (start <= new Date('2020-03-01')) {
+      if (y === 2020 && m === 2) value *= (1 - rng() * 0.025);
+      if (y === 2020 && m === 3) value *= (1 + rng() * 0.02);
+    }
+    // Simulate 2022 bear — only relevant if fund started before mid-2022
+    if (start <= new Date('2022-06-01')) {
+      if (y === 2022 && m >= 0 && m <= 5) value *= (1 - rng() * 0.003);
+    }
     data.push({ time: d.toISOString().split('T')[0], value: parseFloat((value - 100).toFixed(2)) });
   }
   return data;
@@ -846,8 +914,364 @@ function createMoverRow(h) {
 }
 
 // ============================================
-// NAVIGATION
+// INDIVIDUAL HOLDING PERFORMANCE
 // ============================================
+function renderHoldingPerfSelector() {
+  const selector = document.getElementById('holding-perf-selector');
+  if (!selector || !enrichedHoldings.length) return;
+  selector.innerHTML = enrichedHoldings
+    .sort((a, b) => b.allocation - a.allocation)
+    .map(h => {
+      return `<button class="holding-perf-chip ${selectedHoldingPerfTicker === h.ticker ? 'active' : ''}" data-ticker="${escHtml(h.ticker)}">
+        ${escHtml(h.ticker)}
+      </button>`;
+    }).join('');
+
+  selector.addEventListener('click', (e) => {
+    const chip = e.target.closest('.holding-perf-chip');
+    if (!chip) return;
+    const ticker = chip.dataset.ticker;
+    selector.querySelectorAll('.holding-perf-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    selectedHoldingPerfTicker = ticker;
+    renderHoldingPerfChart(ticker);
+  });
+}
+
+async function renderHoldingPerfChart(ticker) {
+  const container = document.getElementById('holding-perf-chart-container');
+  const emptyEl = document.getElementById('holding-perf-empty');
+  const infoEl = document.getElementById('holding-perf-info');
+  if (!container) return;
+
+  emptyEl.style.display = 'none';
+  container.innerHTML = '<div class="empty-state"><div class="spinner"></div><p class="text-tertiary" style="margin-top:var(--space-sm);">Cargando datos...</p></div>';
+
+  const holding = portfolio.holdings.find(h => h.ticker === ticker);
+  const enriched = enrichedHoldings.find(h => h.ticker === ticker);
+
+  // Try to get real candle data (1 year lookback)
+  const now = Math.floor(Date.now() / 1000);
+  const oneYearAgo = now - 365 * 24 * 3600;
+  let candleData = null;
+
+  if (!demoMode) {
+    try {
+      candleData = await getCandles(ticker, 'D', oneYearAgo, now);
+    } catch (e) { /* fall through to demo */ }
+  }
+
+  // Build chart data
+  let chartData = [];
+  if (candleData && candleData.s === 'ok' && candleData.c && candleData.c.length > 0) {
+    chartData = candleData.t.map((t, i) => ({
+      time: new Date(t * 1000).toISOString().split('T')[0],
+      value: parseFloat(candleData.c[i].toFixed(2)),
+    }));
+  } else {
+    // Generate demo price data (seeded by ticker)
+    const seed = ticker.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    const rng = seededRandom(seed);
+    const basePrice = enriched?.price || (50 + rng() * 200);
+    let price = basePrice * 0.7; // start 30% below current
+    const startDate = new Date();
+    startDate.setFullYear(startDate.getFullYear() - 1);
+    for (let d = new Date(startDate); d <= new Date(); d.setDate(d.getDate() + 1)) {
+      if (d.getDay() === 0 || d.getDay() === 6) continue;
+      price *= (1 + (rng() - 0.49) * 0.04);
+      chartData.push({ time: d.toISOString().split('T')[0], value: parseFloat(price.toFixed(2)) });
+    }
+    // End at the actual price if available
+    if (enriched?.price && chartData.length > 0) {
+      const lastPrice = chartData[chartData.length - 1].value;
+      const scale = enriched.price / lastPrice;
+      chartData = chartData.map(d => ({ ...d, value: parseFloat((d.value * scale).toFixed(2)) }));
+    }
+  }
+
+  if (!chartData.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><p class="empty-state-text text-tertiary">Sin datos históricos disponibles</p></div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  if (holdingPerfChart) { try { holdingPerfChart.remove(); } catch(e) {} holdingPerfChart = null; }
+
+  const chart = createChart(container, {
+    width: container.clientWidth || 800, height: 320,
+    layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: '#94a3b8', fontFamily: "'Inter', sans-serif", fontSize: 11 },
+    grid: { vertLines: { color: 'rgba(148,163,184,0.05)' }, horzLines: { color: 'rgba(148,163,184,0.05)' } },
+    crosshair: { vertLine: { color: 'rgba(59,130,246,0.3)', width: 1, style: LineStyle.Dashed }, horzLine: { color: 'rgba(59,130,246,0.3)', width: 1, style: LineStyle.Dashed } },
+    rightPriceScale: { borderColor: 'rgba(148,163,184,0.1)' },
+    timeScale: { borderColor: 'rgba(148,163,184,0.1)', timeVisible: false },
+    handleScroll: true, handleScale: true,
+  });
+
+  // Price series
+  const firstVal = chartData[0].value;
+  const lastVal = chartData[chartData.length - 1].value;
+  const isUp = lastVal >= firstVal;
+  const lineColor = isUp ? '#10b981' : '#ef4444';
+  const topColor = isUp ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)';
+  const bottomColor = isUp ? 'rgba(16,185,129,0.02)' : 'rgba(239,68,68,0.02)';
+
+  const series = chart.addSeries(AreaSeries, { lineColor, topColor, bottomColor, lineWidth: 2 });
+  series.setData(chartData);
+
+  // Mark when holding was added to the fund
+  if (holding?.addedDate) {
+    const addedData = chartData.find(d => d.time >= holding.addedDate);
+    if (addedData) {
+      try {
+        series.setMarkers([{
+          time: addedData.time,
+          position: 'belowBar',
+          color: '#f59e0b',
+          shape: 'arrowUp',
+          text: `Ingresó al fondo (${holding.addedDate})`,
+          size: 1,
+        }]);
+      } catch(e) { /* markers may not be supported */ }
+    }
+  }
+
+  chart.timeScale().fitContent();
+  holdingPerfChart = chart;
+
+  const resizeObserver = new ResizeObserver(() => {
+    chart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
+  });
+  resizeObserver.observe(container);
+
+  // Show info bar
+  if (infoEl && enriched) {
+    infoEl.style.display = '';
+    document.getElementById('hp-ticker').textContent = ticker;
+    document.getElementById('hp-added').textContent = holding?.addedDate || '—';
+    document.getElementById('hp-price').textContent = enriched.price ? formatUSD(enriched.price) : '—';
+    const changeEl = document.getElementById('hp-change');
+    if (enriched.changePercent !== null) {
+      changeEl.textContent = formatPercent(enriched.changePercent);
+      changeEl.className = `font-mono font-bold ${gainLossClass(enriched.changePercent)}`;
+    } else {
+      changeEl.textContent = '—';
+    }
+    document.getElementById('hp-alloc').textContent = formatPercentAbs(enriched.allocation);
+  }
+}
+
+// ============================================
+// SYMBOL SEARCH (Autocomplete)
+// ============================================
+
+// Fallback list of common symbols for demo mode
+const DEMO_SYMBOLS = [
+  { symbol: 'AAPL', description: 'Apple Inc.', type: 'Common Stock' },
+  { symbol: 'MSFT', description: 'Microsoft Corporation', type: 'Common Stock' },
+  { symbol: 'NVDA', description: 'NVIDIA Corporation', type: 'Common Stock' },
+  { symbol: 'AMZN', description: 'Amazon.com, Inc.', type: 'Common Stock' },
+  { symbol: 'GOOGL', description: 'Alphabet Inc. Class A', type: 'Common Stock' },
+  { symbol: 'META', description: 'Meta Platforms, Inc.', type: 'Common Stock' },
+  { symbol: 'TSLA', description: 'Tesla, Inc.', type: 'Common Stock' },
+  { symbol: 'JPM', description: 'JPMorgan Chase & Co.', type: 'Common Stock' },
+  { symbol: 'V', description: 'Visa Inc.', type: 'Common Stock' },
+  { symbol: 'UNH', description: 'UnitedHealth Group Inc.', type: 'Common Stock' },
+  { symbol: 'XOM', description: 'Exxon Mobil Corporation', type: 'Common Stock' },
+  { symbol: 'JNJ', description: 'Johnson & Johnson', type: 'Common Stock' },
+  { symbol: 'WMT', description: 'Walmart Inc.', type: 'Common Stock' },
+  { symbol: 'MA', description: 'Mastercard Inc.', type: 'Common Stock' },
+  { symbol: 'PG', description: 'Procter & Gamble Co.', type: 'Common Stock' },
+  { symbol: 'AVGO', description: 'Broadcom Inc.', type: 'Common Stock' },
+  { symbol: 'HD', description: 'The Home Depot, Inc.', type: 'Common Stock' },
+  { symbol: 'COST', description: 'Costco Wholesale Corp.', type: 'Common Stock' },
+  { symbol: 'NFLX', description: 'Netflix, Inc.', type: 'Common Stock' },
+  { symbol: 'AMD', description: 'Advanced Micro Devices', type: 'Common Stock' },
+  { symbol: 'ADBE', description: 'Adobe Inc.', type: 'Common Stock' },
+  { symbol: 'ORCL', description: 'Oracle Corporation', type: 'Common Stock' },
+  { symbol: 'CRM', description: 'Salesforce, Inc.', type: 'Common Stock' },
+  { symbol: 'INTU', description: 'Intuit Inc.', type: 'Common Stock' },
+  { symbol: 'QCOM', description: 'QUALCOMM Inc.', type: 'Common Stock' },
+  { symbol: 'BAC', description: 'Bank of America Corp.', type: 'Common Stock' },
+  { symbol: 'WFC', description: 'Wells Fargo & Company', type: 'Common Stock' },
+  { symbol: 'GS', description: 'Goldman Sachs Group', type: 'Common Stock' },
+  { symbol: 'MS', description: 'Morgan Stanley', type: 'Common Stock' },
+  { symbol: 'ABBV', description: 'AbbVie Inc.', type: 'Common Stock' },
+  { symbol: 'LIN', description: 'Linde plc', type: 'Common Stock' },
+  { symbol: 'ISRG', description: 'Intuitive Surgical, Inc.', type: 'Common Stock' },
+  { symbol: 'IBM', description: 'IBM Corporation', type: 'Common Stock' },
+  { symbol: 'IONQ', description: 'IonQ, Inc.', type: 'Common Stock' },
+  { symbol: 'BA', description: 'The Boeing Company', type: 'Common Stock' },
+  { symbol: 'LMT', description: 'Lockheed Martin Corp.', type: 'Common Stock' },
+  { symbol: 'RTX', description: 'RTX Corporation', type: 'Common Stock' },
+  { symbol: 'NOC', description: 'Northrop Grumman Corp.', type: 'Common Stock' },
+  { symbol: 'GD', description: 'General Dynamics Corp.', type: 'Common Stock' },
+  { symbol: 'PLTR', description: 'Palantir Technologies Inc.', type: 'Common Stock' },
+  { symbol: 'KKR', description: 'KKR & Co. Inc.', type: 'Common Stock' },
+  { symbol: 'NBIS', description: 'Nebius Group N.V.', type: 'Common Stock' },
+  { symbol: 'DUOL', description: 'Duolingo, Inc.', type: 'Common Stock' },
+  { symbol: 'OKLO', description: 'Oklo Inc.', type: 'Common Stock' },
+  { symbol: 'NKE', description: 'Nike, Inc.', type: 'Common Stock' },
+  { symbol: 'TSM', description: 'Taiwan Semiconductor Mfg.', type: 'Common Stock' },
+  { symbol: 'BABA', description: 'Alibaba Group Holding', type: 'Common Stock' },
+  { symbol: 'PDD', description: 'PDD Holdings Inc.', type: 'Common Stock' },
+  { symbol: 'TCEHY', description: 'Tencent Holdings Ltd.', type: 'Common Stock' },
+  { symbol: 'INFY', description: 'Infosys Limited', type: 'Common Stock' },
+  { symbol: 'MELI', description: 'MercadoLibre, Inc.', type: 'Common Stock' },
+  { symbol: 'VALE', description: 'Vale S.A.', type: 'Common Stock' },
+  { symbol: 'SPY', description: 'SPDR S&P 500 ETF Trust', type: 'ETP' },
+  { symbol: 'QQQ', description: 'Invesco QQQ Trust', type: 'ETP' },
+  { symbol: 'VTI', description: 'Vanguard Total Stock Market ETF', type: 'ETP' },
+  { symbol: 'QQQM', description: 'Invesco NASDAQ 100 ETF', type: 'ETP' },
+  { symbol: 'VOO', description: 'Vanguard S&P 500 ETF', type: 'ETP' },
+  { symbol: 'IVV', description: 'iShares Core S&P 500 ETF', type: 'ETP' },
+  { symbol: 'DYNF', description: 'iShares U.S. Equity Factor Rotation Active ETF', type: 'ETP' },
+  { symbol: 'XAR', description: 'SPDR S&P Aerospace & Defense ETF', type: 'ETP' },
+  { symbol: 'AVEM', description: 'Avantis Emerging Markets Equity ETF', type: 'ETP' },
+  { symbol: 'QTUM', description: 'Defiance Quantum ETF', type: 'ETP' },
+  { symbol: 'CQQQ', description: 'Invesco China Technology ETF', type: 'ETP' },
+  { symbol: 'MAGS', description: 'Roundhill Magnificent Seven ETF', type: 'ETP' },
+  { symbol: 'VWO', description: 'Vanguard FTSE Emerging Markets ETF', type: 'ETP' },
+  { symbol: 'GLD', description: 'SPDR Gold Shares', type: 'ETP' },
+  { symbol: 'TLT', description: 'iShares 20+ Year Treasury Bond ETF', type: 'ETP' },
+  { symbol: 'ARKK', description: 'ARK Innovation ETF', type: 'ETP' },
+  { symbol: 'SOXX', description: 'iShares Semiconductor ETF', type: 'ETP' },
+  { symbol: 'SMH', description: 'VanEck Semiconductor ETF', type: 'ETP' },
+  { symbol: 'XLK', description: 'Technology Select Sector SPDR', type: 'ETP' },
+  { symbol: 'XLF', description: 'Financial Select Sector SPDR', type: 'ETP' },
+  { symbol: 'XLV', description: 'Health Care Select Sector SPDR', type: 'ETP' },
+  { symbol: 'XLE', description: 'Energy Select Sector SPDR', type: 'ETP' },
+  { symbol: 'TSEM', description: 'Tower Semiconductor Ltd.', type: 'Common Stock' },
+  { symbol: 'MU', description: 'Micron Technology, Inc.', type: 'Common Stock' },
+];
+
+function mapFinnhubType(type) {
+  if (!type) return 'Stock';
+  const t = type.toUpperCase();
+  if (t === 'ETP' || t === 'ETF') return 'ETF';
+  return 'Stock';
+}
+
+/**
+ * Initialize a symbol search autocomplete widget.
+ * @param {string} searchId - ID of the search input element
+ * @param {string} resultsId - ID of the results dropdown element
+ * @param {string} chipId - ID of the selected symbol chip element
+ * @param {string} tickerHiddenId - ID of the hidden ticker input
+ * @param {string} nameHiddenId - ID of the hidden name input
+ * @param {string} typeHiddenId - ID of the hidden type input
+ */
+function initSymbolSearch(searchId, resultsId, chipId, tickerHiddenId, nameHiddenId, typeHiddenId) {
+  const searchEl = document.getElementById(searchId);
+  const resultsEl = document.getElementById(resultsId);
+  const chipEl = document.getElementById(chipId);
+  if (!searchEl || !resultsEl || !chipEl) return;
+
+  let debounceTimer = null;
+  let currentResults = [];
+
+  function selectSymbol(item) {
+    const ticker = item.symbol || item.displaySymbol;
+    const name = item.description;
+    const type = mapFinnhubType(item.type);
+    document.getElementById(tickerHiddenId).value = ticker;
+    document.getElementById(nameHiddenId).value = name;
+    document.getElementById(typeHiddenId).value = type;
+
+    const typeLabel = type === 'ETF' ? 'ETF' : type === 'Fund' ? 'Fund' : 'Stock';
+    const typeClass = type === 'ETF' ? 'badge-etf' : type === 'Fund' ? 'badge-fund' : 'badge-stock';
+    chipEl.innerHTML = `
+      <span class="badge ${typeClass}" style="font-size:0.6rem;">${escHtml(typeLabel)}</span>
+      <span class="chip-ticker">${escHtml(ticker)}</span>
+      <span class="chip-name">${escHtml(name)}</span>
+      <button class="chip-clear" type="button">✕</button>
+    `;
+    chipEl.style.display = 'flex';
+    searchEl.value = '';
+    resultsEl.style.display = 'none';
+
+    chipEl.querySelector('.chip-clear').addEventListener('click', () => {
+      chipEl.style.display = 'none';
+      document.getElementById(tickerHiddenId).value = '';
+      document.getElementById(nameHiddenId).value = '';
+      document.getElementById(typeHiddenId).value = 'Stock';
+      searchEl.value = '';
+      searchEl.focus();
+    });
+  }
+
+  function showResults(items) {
+    currentResults = items;
+    if (!items.length) {
+      resultsEl.style.display = 'none';
+      return;
+    }
+    resultsEl.innerHTML = items.map((item, idx) => {
+      const type = mapFinnhubType(item.type);
+      const typeLabel = type === 'ETF' ? 'ETF' : type === 'Fund' ? 'Fund' : 'Stock';
+      const typeClass = type === 'ETF' ? 'etf' : type === 'Fund' ? 'fund' : 'stock';
+      return `<div class="symbol-result-item" data-idx="${idx}">
+        <span class="symbol-result-ticker">${escHtml(item.displaySymbol || item.symbol)}</span>
+        <span class="symbol-result-name">${escHtml(item.description)}</span>
+        <span class="symbol-result-type ${typeClass}">${escHtml(typeLabel)}</span>
+      </div>`;
+    }).join('');
+    resultsEl.style.display = 'block';
+
+    resultsEl.querySelectorAll('.symbol-result-item').forEach(el => {
+      el.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        selectSymbol(currentResults[parseInt(el.dataset.idx)]);
+      });
+    });
+  }
+
+  searchEl.addEventListener('input', () => {
+    const query = searchEl.value.trim();
+    clearTimeout(debounceTimer);
+    if (query.length < 1) { resultsEl.style.display = 'none'; return; }
+
+    debounceTimer = setTimeout(async () => {
+      let results;
+      if (!demoMode && hasApiKey()) {
+        results = await searchSymbols(query);
+      } else {
+        const q = query.toLowerCase();
+        results = DEMO_SYMBOLS.filter(s =>
+          s.symbol.toLowerCase().includes(q) ||
+          s.description.toLowerCase().includes(q)
+        ).slice(0, 12);
+      }
+      showResults(results);
+    }, 280);
+  });
+
+  searchEl.addEventListener('keydown', (e) => {
+    const items = resultsEl.querySelectorAll('.symbol-result-item');
+    const highlighted = resultsEl.querySelector('.symbol-result-item.highlighted');
+    let idx = highlighted ? parseInt(highlighted.dataset.idx) : -1;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      idx = Math.min(idx + 1, items.length - 1);
+      items.forEach(el => el.classList.remove('highlighted'));
+      if (items[idx]) items[idx].classList.add('highlighted');
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      idx = Math.max(idx - 1, 0);
+      items.forEach(el => el.classList.remove('highlighted'));
+      if (items[idx]) items[idx].classList.add('highlighted');
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (highlighted) selectSymbol(currentResults[parseInt(highlighted.dataset.idx)]);
+      else if (currentResults.length > 0) selectSymbol(currentResults[0]);
+    } else if (e.key === 'Escape') {
+      resultsEl.style.display = 'none';
+    }
+  });
+
+  searchEl.addEventListener('blur', () => {
+    setTimeout(() => { resultsEl.style.display = 'none'; }, 200);
+  });
+}
 function initNavigation() {
   document.querySelectorAll('.nav-tab').forEach(tab => {
     tab.addEventListener('click', () => switchTab(tab.dataset.tab));
@@ -876,7 +1300,10 @@ function switchTab(tabName) {
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById(`tab-${tabName}`)?.classList.add('active');
   if (tabName === 'performance') {
-    setTimeout(() => { try { renderPerformanceChart(); } catch(e) {} }, 50);
+    setTimeout(() => {
+      try { renderPerformanceChart(); } catch(e) {}
+      renderHoldingPerfSelector();
+    }, 50);
   }
 }
 
@@ -941,6 +1368,36 @@ function initHoldingsInteractions() {
 // MODALS
 // ============================================
 function initModals() {
+  // Edit Total Value
+  document.getElementById('btn-edit-total')?.addEventListener('click', () => {
+    const editInline = document.getElementById('total-edit-inline');
+    const input = document.getElementById('total-edit-input');
+    editInline.style.display = editInline.style.display === 'none' ? 'flex' : 'none';
+    if (editInline.style.display !== 'none') {
+      input.value = portfolio.fund.totalValueCLP;
+      input.focus();
+      input.select();
+    }
+  });
+  document.getElementById('total-edit-cancel')?.addEventListener('click', () => {
+    document.getElementById('total-edit-inline').style.display = 'none';
+  });
+  document.getElementById('total-edit-save')?.addEventListener('click', () => {
+    const raw = document.getElementById('total-edit-input').value.replace(/\./g, '').replace(',', '.');
+    const val = parseFloat(raw);
+    if (isNaN(val) || val <= 0) { showToast('❌ Valor inválido', 'error'); return; }
+    portfolio.fund.totalValueCLP = Math.round(val);
+    savePortfolio(portfolio);
+    document.getElementById('total-edit-inline').style.display = 'none';
+    Cache.clearAll();
+    loadData();
+    showToast(`✅ Valor base actualizado a ${formatCLP(val)}`, 'success');
+  });
+  document.getElementById('total-edit-input')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('total-edit-save').click();
+    if (e.key === 'Escape') document.getElementById('total-edit-cancel').click();
+  });
+
   // Settings
   const settingsBtn = document.getElementById('btn-settings');
   const settingsModal = document.getElementById('settings-modal');
@@ -1044,8 +1501,23 @@ function initModals() {
   const addModal = document.getElementById('add-holding-modal');
   const addBackdrop = document.getElementById('add-holding-backdrop');
 
-  addBtn.addEventListener('click', () => { addModal.classList.add('active'); addBackdrop.classList.add('active'); });
-  const closeAdd = () => { addModal.classList.remove('active'); addBackdrop.classList.remove('active'); };
+  addBtn.addEventListener('click', () => {
+    addModal.classList.add('active');
+    addBackdrop.classList.add('active');
+    // Init symbol search for the modal
+    initSymbolSearch(
+      'add-symbol-search',
+      'add-symbol-results',
+      'add-selected-symbol',
+      'add-ticker',
+      'add-name',
+      'add-type'
+    );
+  });
+  const closeAdd = () => {
+    addModal.classList.remove('active');
+    addBackdrop.classList.remove('active');
+  };
   document.getElementById('add-holding-close').addEventListener('click', closeAdd);
   document.getElementById('add-holding-cancel').addEventListener('click', closeAdd);
   addBackdrop.addEventListener('click', closeAdd);
@@ -1054,13 +1526,13 @@ function initModals() {
     const ticker = document.getElementById('add-ticker').value.trim().toUpperCase();
     const name = document.getElementById('add-name').value.trim();
     const shortName = document.getElementById('add-short-name').value.trim() || ticker;
-    const type = document.getElementById('add-type').value;
+    const type = document.getElementById('add-type').value || 'Stock';
     const allocation = parseFloat(document.getElementById('add-allocation').value);
     const sector = document.getElementById('add-sector').value;
     const notes = document.getElementById('add-notes').value.trim();
 
     if (!ticker || !name || isNaN(allocation)) {
-      showToast('❌ Completa los campos requeridos', 'error');
+      showToast('❌ Selecciona un activo y completa el %', 'error');
       return;
     }
     if (portfolio.holdings.some(h => h.ticker === ticker)) {
@@ -1073,7 +1545,17 @@ function initModals() {
     Cache.clearAll();
     loadData();
     showToast(`✅ ${ticker} agregado`, 'success');
-    ['add-ticker', 'add-name', 'add-short-name', 'add-allocation', 'add-notes'].forEach(id => { document.getElementById(id).value = ''; });
+    // Reset search UI
+    const searchEl = document.getElementById('add-symbol-search');
+    if (searchEl) searchEl.value = '';
+    const selEl = document.getElementById('add-selected-symbol');
+    if (selEl) selEl.style.display = 'none';
+    document.getElementById('add-ticker').value = '';
+    document.getElementById('add-name').value = '';
+    document.getElementById('add-short-name').value = '';
+    document.getElementById('add-type').value = 'Stock';
+    document.getElementById('add-allocation').value = '';
+    document.getElementById('add-notes').value = '';
   });
 }
 

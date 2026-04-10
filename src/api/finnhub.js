@@ -256,3 +256,22 @@ export async function validateApiKey(key) {
     return false;
   }
 }
+
+/**
+ * Search for symbols by query string (ticker or company name)
+ * @param {string} query - Search query
+ * @returns {Promise<Array<{symbol, description, type, displaySymbol}>>}
+ */
+export async function searchSymbols(query) {
+  const apiKey = getApiKey();
+  if (!apiKey || query.length < 1) return [];
+
+  try {
+    const response = await fetch(`${BASE_URL}/search?q=${encodeURIComponent(query)}&token=${apiKey}`);
+    if (!response.ok) return [];
+    const data = await response.json();
+    return Array.isArray(data.result) ? data.result.slice(0, 15) : [];
+  } catch {
+    return [];
+  }
+}
