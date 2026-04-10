@@ -259,6 +259,7 @@ export async function validateApiKey(key) {
 
 /**
  * Search for symbols by query string (ticker or company name)
+ * Filters to US-listed instruments for relevance.
  * @param {string} query - Search query
  * @returns {Promise<Array<{symbol, description, type, displaySymbol}>>}
  */
@@ -270,8 +271,73 @@ export async function searchSymbols(query) {
     const response = await fetch(`${BASE_URL}/search?q=${encodeURIComponent(query)}&token=${apiKey}`);
     if (!response.ok) return [];
     const data = await response.json();
-    return Array.isArray(data.result) ? data.result.slice(0, 15) : [];
+    if (!Array.isArray(data.result)) return [];
+    // Prefer US-listed symbols (no dot in symbol = US exchange, or known US suffixes)
+    const filtered = data.result.filter(item => {
+      const sym = item.symbol || '';
+      // Keep symbols without dots (US exchanges) or with .US suffix
+      return !sym.includes('.') || sym.endsWith('.US');
+    });
+    // If filtering left nothing, fall back to all results
+    const results = filtered.length > 0 ? filtered : data.result;
+    return results.slice(0, 20);
   } catch {
     return [];
+  }
+}
+
+/**
+ * Get company profile (includes sector/industry info)
+ * @param {string} symbol - Ticker symbol
+ * @returns {Promise<{finnhubIndustry, name, ticker, exchange, ...}|null>}
+ */
+export async function getCompanyProfile(symbol) {
+  const cacheKey = `profile_${symbol}`;
+  const cached = Cache.get(cacheKey);
+  if (cached) return cached;
+
+  const apiKey = getApiKey();
+  if (!apiKey) return null;
+
+  try {
+    const data = await rateLimitedFetch(
+      `${BASE_URL}/stock/profile2?symbol=${symbol}&token=${apiKey}`
+    );
+    if (data && data.name) {
+      Cache.set(cacheKey, data, 24 * 60 * 60 * 1000); // Cache for 24h
+      return data;
+    }
+    return null;
+  } catch (error) {
+    console.warn(`Failed to get profile for ${symbol}:`, error.message);
+    return null;
+  }
+}
+
+/**
+ * Get ETF holdings from Finnhub
+ * @param {string} symbol - ETF ticker symbol
+ * @returns {Promise<{symbol, holdings: Array<{symbol, name, share, percent}>}|null>}
+ */
+export async function getEtfHoldings(symbol) {
+  const cacheKey = `etf_holdings_${symbol}`;
+  const cached = Cache.get(cacheKey);
+  if (cached) return cached;
+
+  const apiKey = getApiKey();
+  if (!apiKey) return null;
+
+  try {
+    const data = await rateLimitedFetch(
+      `${BASE_URL}/etf/holdings?symbol=${symbol}&token=${apiKey}`
+    );
+    if (data && Array.isArray(data.holdings) && data.holdings.length > 0) {
+      Cache.set(cacheKey, data, 24 * 60 * 60 * 1000); // Cache for 24h
+      return data;
+    }
+    return null;
+  } catch (error) {
+    console.warn(`Failed to get ETF holdings for ${symbol}:`, error.message);
+    return null;
   }
 }

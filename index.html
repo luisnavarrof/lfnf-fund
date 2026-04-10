@@ -79,9 +79,9 @@
               <input type="hidden" id="setup-holding-type" value="Stock" />
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); margin-bottom: var(--space-md);">
-              <div class="form-group"><label class="form-label">Sector</label>
+              <div class="form-group"><label class="form-label">Sector <span class="text-tertiary" style="font-size:var(--text-xs);">(auto-detectado)</span></label>
                 <select id="setup-holding-sector" class="form-input">
-                  <option value="Technology">Technology</option><option value="Financials">Financials</option><option value="Healthcare">Healthcare</option><option value="Consumer Discretionary">Consumer Discretionary</option><option value="Multi-Factor">Multi-Factor</option><option value="Emerging Markets">Emerging Markets</option><option value="Aerospace & Defense">Aerospace &amp; Defense</option><option value="Energy">Energy</option><option value="Materials">Materials</option><option value="Telecom">Telecom</option><option value="Other">Otro...</option>
+                  <option value="Auto">🔍 Auto-detectar</option><option value="Technology">Technology</option><option value="Financials">Financials</option><option value="Healthcare">Healthcare</option><option value="Consumer Discretionary">Consumer Discretionary</option><option value="Consumer Staples">Consumer Staples</option><option value="Multi-Factor">Multi-Factor</option><option value="Emerging Markets">Emerging Markets</option><option value="Aerospace & Defense">Aerospace &amp; Defense</option><option value="Energy">Energy</option><option value="Materials">Materials</option><option value="Telecom">Telecom</option><option value="Other">Otro...</option>
                 </select>
               </div>
               <div class="form-group">
@@ -602,8 +602,9 @@
             <div id="add-allocation-preview" class="text-tertiary" style="font-size:var(--text-xs);margin-top:2px;"></div>
           </div>
           <div class="form-group">
-            <label class="form-label">Sector</label>
+            <label class="form-label">Sector <span class="text-tertiary" style="font-size:var(--text-xs);">(auto-detectado)</span></label>
             <select class="form-select" id="add-sector">
+              <option value="Auto">🔍 Auto-detectar</option>
               <option value="Technology">Technology</option>
               <option value="Healthcare">Healthcare</option>
               <option value="Financials">Financials</option>
