@@ -50,6 +50,7 @@ let allocationChart = null;
 let sectorChart = null;
 let sectorDetailChart = null;
 let performanceChart = null;
+let allHoldingsPerfChart = null;
 let contributionChartInstance = null;
 let holdingPerfChart = null;
 let selectedHoldingPerfTicker = null;
@@ -752,6 +753,7 @@ function createNewsItem(news) {
 // ============================================
 function renderPerformanceTab() {
   try { renderPerformanceChart(); } catch(e) { console.warn('Perf chart:', e); }
+  try { renderAllHoldingsPerfChart(); } catch(e) { console.warn('All holdings perf chart:', e); }
   renderContributionChart();
   renderTopMovers();
   renderHoldingPerfSelector();
@@ -781,8 +783,13 @@ function renderPerformanceChart() {
     handleScroll: true, handleScale: true,
   });
 
-  // Start from fund inception date
-  const inceptionDate = portfolio.fund.inceptionDate || '2026-04-09';
+  // Find the earliest holding addedDate as fund inception
+  const holdingDates = portfolio.holdings
+    .map(h => h.addedDate)
+    .filter(d => d)
+    .sort();
+  const inceptionDate = holdingDates.length > 0 ? holdingDates[0] : (portfolio.fund.inceptionDate || '2026-04-09');
+
   const lfnfData = generateDeterministicPerformance(42, 0.0007, 0.015, inceptionDate);
   const spyData = generateDeterministicPerformance(123, 0.0004, 0.012, inceptionDate);
 
@@ -815,6 +822,67 @@ function renderPerformanceChart() {
 
   chart.timeScale().fitContent();
   performanceChart = chart;
+
+  const resizeObserver = new ResizeObserver(() => { chart.applyOptions({ width: container.clientWidth, height: container.clientHeight }); });
+  resizeObserver.observe(container);
+}
+
+/**
+ * Render all holdings performance lines on a single chart.
+ * Each holding starts from its addedDate, showing % return normalized to 0%.
+ */
+function renderAllHoldingsPerfChart() {
+  const container = document.getElementById('all-holdings-perf-container');
+  const legendEl = document.getElementById('all-holdings-perf-legend');
+  if (!container) return;
+
+  container.innerHTML = '';
+  if (allHoldingsPerfChart) { try { allHoldingsPerfChart.remove(); } catch(e) {} allHoldingsPerfChart = null; }
+
+  const chart = createChart(container, {
+    width: container.clientWidth || 800, height: 350,
+    layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: '#94a3b8', fontFamily: "'Inter', sans-serif", fontSize: 11 },
+    grid: { vertLines: { color: 'rgba(148,163,184,0.05)' }, horzLines: { color: 'rgba(148,163,184,0.05)' } },
+    crosshair: { vertLine: { color: 'rgba(59,130,246,0.3)', width: 1, style: LineStyle.Dashed }, horzLine: { color: 'rgba(59,130,246,0.3)', width: 1, style: LineStyle.Dashed } },
+    rightPriceScale: { borderColor: 'rgba(148,163,184,0.1)' },
+    timeScale: { borderColor: 'rgba(148,163,184,0.1)', timeVisible: false },
+    handleScroll: true, handleScale: true,
+  });
+
+  const inceptionDate = portfolio.fund.inceptionDate || '2026-04-09';
+  const sorted = [...portfolio.holdings].sort((a, b) => (a.addedDate || inceptionDate).localeCompare(b.addedDate || inceptionDate));
+
+  // Generate a line for each holding
+  const legendParts = [];
+  sorted.forEach((h, i) => {
+    const color = HOLDING_COLORS[i % HOLDING_COLORS.length];
+    const startDate = h.addedDate || inceptionDate;
+    const seed = h.ticker.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    const enriched = enrichedHoldings.find(eh => eh.ticker === h.ticker);
+    const dailyReturn = (enriched?.changePercent || 0) * 0.0001 + 0.0003;
+    const volatility = 0.018;
+
+    const data = generateDeterministicPerformance(seed, dailyReturn, volatility, startDate);
+
+    const series = chart.addSeries(LineSeries, {
+      color: color,
+      lineWidth: 1.5,
+      priceFormat: { type: 'percent' },
+      lastValueVisible: false,
+      priceLineVisible: false,
+    });
+    series.setData(data);
+
+    legendParts.push(`<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;background:var(--bg-surface);border-radius:var(--radius-sm);border:1px solid var(--border-subtle);font-size:var(--text-xs);">
+      <div style="width:10px;height:3px;background:${color};border-radius:2px;"></div>
+      <span class="font-bold">${escHtml(h.ticker)}</span>
+    </div>`);
+  });
+
+  if (legendEl) legendEl.innerHTML = legendParts.join('');
+
+  chart.timeScale().fitContent();
+  allHoldingsPerfChart = chart;
 
   const resizeObserver = new ResizeObserver(() => { chart.applyOptions({ width: container.clientWidth, height: container.clientHeight }); });
   resizeObserver.observe(container);
@@ -1726,6 +1794,7 @@ function switchTab(tabName) {
   if (tabName === 'performance') {
     setTimeout(() => {
       try { renderPerformanceChart(); } catch(e) {}
+      try { renderAllHoldingsPerfChart(); } catch(e) {}
       renderHoldingPerfSelector();
     }, 50);
   }

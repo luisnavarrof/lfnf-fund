@@ -438,6 +438,18 @@
           </div>
         </div>
 
+        <!-- All Holdings Performance Lines -->
+        <div class="card" style="margin-bottom: var(--space-lg);">
+          <div class="card-header">
+            <h2 class="card-title">📈 Rendimiento de Todos los Holdings</h2>
+            <div class="text-tertiary" style="font-size:var(--text-xs);">Cada holding aparece desde su fecha de ingreso al fondo (rendimiento % normalizado)</div>
+          </div>
+          <div class="card-body">
+            <div id="all-holdings-perf-legend" style="display:flex; flex-wrap:wrap; gap:var(--space-sm); margin-bottom:var(--space-md);"></div>
+            <div class="performance-chart-wrapper" id="all-holdings-perf-container"></div>
+          </div>
+        </div>
+
         <!-- Contribution Chart -->
         <div class="card" style="margin-bottom: var(--space-lg);">
           <div class="card-header">
@@ -452,7 +464,7 @@
         <!-- Individual Holding Performance -->
         <div class="card" style="margin-bottom: var(--space-lg);">
           <div class="card-header">
-            <h2 class="card-title">📈 Rendimiento por Holding</h2>
+            <h2 class="card-title">🔎 Rendimiento Individual por Holding</h2>
             <div class="text-tertiary" style="font-size:var(--text-xs);">Precio histórico de cada activo • Línea vertical = fecha de ingreso al fondo</div>
           </div>
           <div class="card-body">
