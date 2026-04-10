@@ -44,6 +44,7 @@ let isLoading = false;
 let demoMode = false;
 let decomposedHoldings = [];
 let realSectors = {};
+let displayCurrency = localStorage.getItem('lfnf_display_currency') || 'CLP'; // 'CLP' or 'USD'
 
 // Chart instances
 let allocationChart = null;
@@ -417,12 +418,21 @@ function renderSummaryCards() {
   if (!summary) return;
   const liveTotal = summary.liveTotalCLP;
   const liveTotalUSD = summary.liveTotalUSD;
-  animateValue('total-value-clp', formatCLP(liveTotal));
-  document.getElementById('total-value-usd').textContent = `≈ ${formatUSD(liveTotalUSD)}`;
+
+  if (displayCurrency === 'USD') {
+    animateValue('total-value-primary', formatUSD(liveTotalUSD));
+    document.getElementById('total-value-secondary').textContent = `≈ ${formatCLP(liveTotal)}`;
+  } else {
+    animateValue('total-value-primary', formatCLP(liveTotal));
+    document.getElementById('total-value-secondary').textContent = `≈ ${formatUSD(liveTotalUSD)}`;
+  }
+
   // Show base value if it differs from live total
   const baseEl = document.getElementById('total-value-base');
   if (Math.abs(liveTotal - summary.totalCLP) > 1) {
-    baseEl.textContent = `Base: ${formatCLP(summary.totalCLP)}`;
+    baseEl.textContent = displayCurrency === 'USD'
+      ? `Base: ${formatUSD(summary.totalUSD)}`
+      : `Base: ${formatCLP(summary.totalCLP)}`;
     baseEl.style.display = '';
   } else {
     baseEl.style.display = 'none';
@@ -431,8 +441,13 @@ function renderSummaryCards() {
   const changeEl = document.getElementById('daily-change');
   changeEl.textContent = formatPercent(summary.dailyChangePercent);
   changeEl.className = `summary-card-value ${gainLossClass(summary.dailyChangePercent)}`;
-  document.getElementById('daily-change-clp').textContent = `${summary.dailyChangeCLP >= 0 ? '+' : ''}${formatCLP(summary.dailyChangeCLP)}`;
-  document.getElementById('daily-change-clp').className = `summary-card-sub ${gainLossClass(summary.dailyChangeCLP)}`;
+
+  const changeAmount = displayCurrency === 'USD' ? summary.dailyChangeUSD : summary.dailyChangeCLP;
+  const changeFormatted = displayCurrency === 'USD'
+    ? `${changeAmount >= 0 ? '+' : ''}${formatUSD(changeAmount)}`
+    : `${changeAmount >= 0 ? '+' : ''}${formatCLP(changeAmount)}`;
+  document.getElementById('daily-change-amount').textContent = changeFormatted;
+  document.getElementById('daily-change-amount').className = `summary-card-sub ${gainLossClass(changeAmount)}`;
 
   document.getElementById('holdings-count').textContent = summary.holdingsCount;
   const fundCount = enrichedHoldings.filter(h => h.type === 'Fund').length;
@@ -562,7 +577,7 @@ function createHoldingRow(h, showSector) {
       <td><span class="holding-change ${changeClass}">${changeDisplay}</span></td>
       ${sectorCell}
       <td><div class="holding-allocation-bar"><div class="allocation-bar"><div class="allocation-bar-fill" style="width:${allocationWidth}%"></div></div><span class="allocation-value">${formatPercentAbs(h.allocation)}</span></div></td>
-      <td><div><div class="holding-value-clp">${formatCLP(h.valueCLP)}</div><div class="holding-value-usd">≈ ${formatUSD(h.valueUSD)}</div></div></td>
+      <td><div><div class="holding-value-clp">${displayCurrency === 'USD' ? formatUSD(h.valueUSD) : formatCLP(h.valueCLP)}</div><div class="holding-value-usd">≈ ${displayCurrency === 'USD' ? formatCLP(h.valueCLP) : formatUSD(h.valueUSD)}</div></div></td>
       ${actionsCell}
     </tr>`;
 }
@@ -1861,30 +1876,56 @@ function initHoldingsInteractions() {
 // MODALS
 // ============================================
 function initModals() {
+  // Currency toggle
+  document.getElementById('btn-toggle-currency')?.addEventListener('click', () => {
+    displayCurrency = displayCurrency === 'CLP' ? 'USD' : 'CLP';
+    localStorage.setItem('lfnf_display_currency', displayCurrency);
+    renderSummaryCards();
+    renderFullHoldings();
+    showToast(`💱 Moneda cambiada a ${displayCurrency}`, 'info');
+  });
+
   // Edit Total Value
   document.getElementById('btn-edit-total')?.addEventListener('click', () => {
     const editInline = document.getElementById('total-edit-inline');
     const input = document.getElementById('total-edit-input');
+    const currencySelect = document.getElementById('total-edit-currency');
     editInline.style.display = editInline.style.display === 'none' ? 'flex' : 'none';
     if (editInline.style.display !== 'none') {
+      currencySelect.value = 'CLP';
       input.value = portfolio.fund.totalValueCLP;
       input.focus();
       input.select();
     }
   });
+  // When currency changes in the edit, convert the displayed value
+  document.getElementById('total-edit-currency')?.addEventListener('change', () => {
+    const curr = document.getElementById('total-edit-currency').value;
+    const input = document.getElementById('total-edit-input');
+    if (curr === 'USD') {
+      input.value = (portfolio.fund.totalValueCLP / usdClpRate).toFixed(2);
+    } else {
+      input.value = portfolio.fund.totalValueCLP;
+    }
+    input.focus();
+    input.select();
+  });
   document.getElementById('total-edit-cancel')?.addEventListener('click', () => {
     document.getElementById('total-edit-inline').style.display = 'none';
   });
   document.getElementById('total-edit-save')?.addEventListener('click', () => {
+    const curr = document.getElementById('total-edit-currency').value;
     const raw = document.getElementById('total-edit-input').value.replace(/\./g, '').replace(',', '.');
     const val = parseFloat(raw);
     if (isNaN(val) || val <= 0) { showToast('❌ Valor inválido', 'error'); return; }
-    portfolio.fund.totalValueCLP = Math.round(val);
+    // Convert to CLP if entered in USD
+    const clpVal = curr === 'USD' ? Math.round(val * usdClpRate) : Math.round(val);
+    portfolio.fund.totalValueCLP = clpVal;
     savePortfolio(portfolio);
     document.getElementById('total-edit-inline').style.display = 'none';
     Cache.clearAll();
     loadData();
-    showToast(`✅ Valor base actualizado a ${formatCLP(val)}`, 'success');
+    showToast(`✅ Valor base actualizado a ${formatCLP(clpVal)}`, 'success');
   });
   document.getElementById('total-edit-input')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') document.getElementById('total-edit-save').click();

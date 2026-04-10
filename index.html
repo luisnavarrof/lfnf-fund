@@ -171,13 +171,22 @@
             <div class="summary-card-icon blue">💰</div>
             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: var(--space-xs);">
               <div class="summary-card-label">Valor Total</div>
-              <button class="btn btn-ghost btn-icon" id="btn-edit-total" title="Editar valor base" style="width:22px;height:22px;font-size:0.7rem;border-radius:var(--radius-sm);">✏️</button>
+              <div style="display:flex;gap:2px;align-items:center;">
+                <button class="btn btn-ghost btn-icon" id="btn-toggle-currency" title="Cambiar moneda" style="width:22px;height:22px;font-size:0.6rem;border-radius:var(--radius-sm);padding:0;">💱</button>
+                <button class="btn btn-ghost btn-icon" id="btn-edit-total" title="Editar valor base" style="width:22px;height:22px;font-size:0.7rem;border-radius:var(--radius-sm);">✏️</button>
+              </div>
             </div>
-            <div class="summary-card-value" id="total-value-clp">—</div>
-            <div class="summary-card-sub" id="total-value-usd">—</div>
+            <div class="summary-card-value" id="total-value-primary">—</div>
+            <div class="summary-card-sub" id="total-value-secondary">—</div>
             <div class="summary-card-sub" id="total-value-base" style="color:var(--text-muted);display:none;"></div>
             <div id="total-edit-inline" class="total-edit-inline" style="display:none;">
-              <input type="text" id="total-edit-input" placeholder="Valor en CLP" />
+              <div style="display:flex;gap:4px;align-items:center;">
+                <select id="total-edit-currency" style="width:70px;padding:4px;background:var(--bg-surface);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:var(--text-xs);">
+                  <option value="CLP">CLP</option>
+                  <option value="USD">USD</option>
+                </select>
+                <input type="text" id="total-edit-input" placeholder="Valor" />
+              </div>
               <button class="btn btn-primary btn-sm" id="total-edit-save" style="white-space:nowrap;">✓</button>
               <button class="btn btn-ghost btn-sm" id="total-edit-cancel">✕</button>
             </div>
@@ -186,7 +195,7 @@
             <div class="summary-card-icon green">📈</div>
             <div class="summary-card-label">Cambio Diario</div>
             <div class="summary-card-value" id="daily-change">—</div>
-            <div class="summary-card-sub" id="daily-change-clp">—</div>
+            <div class="summary-card-sub" id="daily-change-amount">—</div>
           </div>
           <div class="summary-card animate-fade-in-up stagger-3">
             <div class="summary-card-icon purple">📦</div>
