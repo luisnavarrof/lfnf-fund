@@ -246,6 +246,12 @@
   border: 1px solid rgba(139, 92, 246, 0.15);
 }
 
+.holding-ticker-icon.fund {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
 .holding-info {
   display: flex;
   flex-direction: column;
