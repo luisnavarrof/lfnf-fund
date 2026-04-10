@@ -146,6 +146,46 @@ function escHtml(str) {
     .replace(/'/g, '&#x27;');
 }
 
+/**
+ * Convert an allocation input to a percentage value.
+ * @param {string} mode - 'percent', 'USD', or 'CLP'
+ * @param {number} value - The raw input value
+ * @param {number} totalCLP - The total portfolio value in CLP
+ * @param {number} rate - USD/CLP exchange rate
+ * @returns {number} allocation as a percentage (0-100)
+ */
+function convertToPercent(mode, value, totalCLP, rate) {
+  if (mode === 'percent') return value;
+  if (mode === 'USD') {
+    const amountCLP = value * rate;
+    return totalCLP > 0 ? (amountCLP / totalCLP) * 100 : 0;
+  }
+  if (mode === 'CLP') {
+    return totalCLP > 0 ? (value / totalCLP) * 100 : 0;
+  }
+  return value;
+}
+
+/**
+ * Get a human-readable preview of the allocation conversion.
+ */
+function getAllocationPreview(mode, value, totalCLP, rate) {
+  if (isNaN(value) || value <= 0) return '';
+  if (mode === 'percent') {
+    const amountCLP = (value / 100) * totalCLP;
+    const amountUSD = amountCLP / rate;
+    return `≈ ${formatCLP(amountCLP)} / ${formatUSD(amountUSD)}`;
+  }
+  const pct = convertToPercent(mode, value, totalCLP, rate);
+  if (mode === 'USD') {
+    return `≈ ${pct.toFixed(1)}% del portafolio (${formatCLP(value * rate)})`;
+  }
+  if (mode === 'CLP') {
+    return `≈ ${pct.toFixed(1)}% del portafolio (${formatUSD(value / rate)})`;
+  }
+  return '';
+}
+
 // Temporary holdings list for onboarding wizard step 3
 let setupHoldings = [];
 
@@ -221,17 +261,28 @@ function initSetup() {
     const ticker = document.getElementById('setup-holding-ticker').value.trim().toUpperCase();
     const name = document.getElementById('setup-holding-name').value.trim();
     const type = document.getElementById('setup-holding-type').value || 'Stock';
-    const allocation = parseFloat(document.getElementById('setup-holding-allocation').value);
+    const rawValue = parseFloat(document.getElementById('setup-holding-allocation').value);
+    const inputMode = document.getElementById('setup-holding-input-mode').value;
     const sector = document.getElementById('setup-holding-sector').value;
-    if (!ticker || !name || isNaN(allocation) || allocation <= 0) {
-      showToast('❌ Selecciona un activo y escribe un % válido', 'error');
+
+    if (!ticker || !name || isNaN(rawValue) || rawValue <= 0) {
+      showToast('❌ Selecciona un activo y escribe un valor válido', 'error');
       return;
     }
+
+    const totalCLP = portfolio.fund.totalValueCLP || 1;
+    const allocation = convertToPercent(inputMode, rawValue, totalCLP, usdClpRate);
+
+    if (allocation <= 0 || allocation > 100) {
+      showToast('❌ La asignación debe estar entre 0% y 100%', 'error');
+      return;
+    }
+
     if (setupHoldings.some(h => h.ticker === ticker)) {
       showToast('❌ Este ticker ya fue agregado', 'error');
       return;
     }
-    setupHoldings.push({ ticker, name, shortName: ticker, type, allocation, sector });
+    setupHoldings.push({ ticker, name, shortName: ticker, type, allocation: parseFloat(allocation.toFixed(1)), sector });
     renderSetupHoldingsList();
     // Clear search
     document.getElementById('setup-symbol-search').value = '';
@@ -240,8 +291,22 @@ function initSetup() {
     document.getElementById('setup-holding-type').value = 'Stock';
     document.getElementById('setup-selected-symbol').style.display = 'none';
     document.getElementById('setup-holding-allocation').value = '';
+    document.getElementById('setup-holding-allocation-preview').textContent = '';
     document.getElementById('setup-holding-allocation').focus();
   });
+
+  // Live preview for allocation input
+  const setupAllocInput = document.getElementById('setup-holding-allocation');
+  const setupAllocMode = document.getElementById('setup-holding-input-mode');
+  const setupAllocPreview = document.getElementById('setup-holding-allocation-preview');
+  function updateSetupAllocPreview() {
+    const val = parseFloat(setupAllocInput.value);
+    const mode = setupAllocMode.value;
+    const totalCLP = portfolio.fund.totalValueCLP || 1;
+    setupAllocPreview.textContent = getAllocationPreview(mode, val, totalCLP, usdClpRate);
+  }
+  setupAllocInput?.addEventListener('input', updateSetupAllocPreview);
+  setupAllocMode?.addEventListener('change', updateSetupAllocPreview);
 
   // Step 3: Finish
   document.getElementById('setup-finish-btn').addEventListener('click', () => {
@@ -2061,14 +2126,24 @@ function initModals() {
     const name = document.getElementById('add-name').value.trim();
     const shortName = document.getElementById('add-short-name').value.trim() || ticker;
     const type = document.getElementById('add-type').value || 'Stock';
-    const allocation = parseFloat(document.getElementById('add-allocation').value);
+    const rawValue = parseFloat(document.getElementById('add-allocation').value);
+    const inputMode = document.getElementById('add-input-mode').value;
     const sector = document.getElementById('add-sector').value;
     const notes = document.getElementById('add-notes').value.trim();
 
-    if (!ticker || !name || isNaN(allocation)) {
-      showToast('❌ Selecciona un activo y completa el %', 'error');
+    if (!ticker || !name || isNaN(rawValue) || rawValue <= 0) {
+      showToast('❌ Selecciona un activo y completa la asignación', 'error');
       return;
     }
+
+    const totalCLP = portfolio.fund.totalValueCLP || 1;
+    const allocation = parseFloat(convertToPercent(inputMode, rawValue, totalCLP, usdClpRate).toFixed(1));
+
+    if (allocation <= 0 || allocation > 100) {
+      showToast('❌ La asignación debe estar entre 0% y 100%', 'error');
+      return;
+    }
+
     if (portfolio.holdings.some(h => h.ticker === ticker)) {
       showToast('❌ Este ticker ya existe', 'error');
       return;
@@ -2078,7 +2153,7 @@ function initModals() {
     closeAdd();
     Cache.clearAll();
     loadData();
-    showToast(`✅ ${ticker} agregado`, 'success');
+    showToast(`✅ ${ticker} agregado (${allocation.toFixed(1)}%)`, 'success');
     // Reset search UI
     const searchEl = document.getElementById('add-symbol-search');
     if (searchEl) searchEl.value = '';
@@ -2090,7 +2165,22 @@ function initModals() {
     document.getElementById('add-type').value = 'Stock';
     document.getElementById('add-allocation').value = '';
     document.getElementById('add-notes').value = '';
+    const previewEl = document.getElementById('add-allocation-preview');
+    if (previewEl) previewEl.textContent = '';
   });
+
+  // Live preview for allocation input in add modal
+  const addAllocInput = document.getElementById('add-allocation');
+  const addAllocMode = document.getElementById('add-input-mode');
+  const addAllocPreview = document.getElementById('add-allocation-preview');
+  function updateAddAllocPreview() {
+    const val = parseFloat(addAllocInput.value);
+    const mode = addAllocMode.value;
+    const totalCLP = portfolio.fund.totalValueCLP || 1;
+    addAllocPreview.textContent = getAllocationPreview(mode, val, totalCLP, usdClpRate);
+  }
+  addAllocInput?.addEventListener('input', updateAddAllocPreview);
+  addAllocMode?.addEventListener('change', updateAddAllocPreview);
 }
 
 // ============================================

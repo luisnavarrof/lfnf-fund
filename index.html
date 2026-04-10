@@ -84,7 +84,18 @@
                   <option value="Technology">Technology</option><option value="Financials">Financials</option><option value="Healthcare">Healthcare</option><option value="Consumer Discretionary">Consumer Discretionary</option><option value="Multi-Factor">Multi-Factor</option><option value="Emerging Markets">Emerging Markets</option><option value="Aerospace & Defense">Aerospace &amp; Defense</option><option value="Energy">Energy</option><option value="Materials">Materials</option><option value="Telecom">Telecom</option><option value="Other">Otro...</option>
                 </select>
               </div>
-              <div class="form-group"><label class="form-label">Peso (%)</label><input type="number" id="setup-holding-allocation" class="form-input" placeholder="Ej: 15.5" step="0.1" min="0" max="100"></div>
+              <div class="form-group">
+                <label class="form-label">Asignación</label>
+                <div style="display:flex; gap:4px;">
+                  <select id="setup-holding-input-mode" class="form-input" style="width:80px;flex-shrink:0;font-size:var(--text-xs);padding:4px;">
+                    <option value="percent">%</option>
+                    <option value="USD">USD</option>
+                    <option value="CLP">CLP</option>
+                  </select>
+                  <input type="number" id="setup-holding-allocation" class="form-input" placeholder="Ej: 15.5" step="0.1" min="0">
+                </div>
+                <div id="setup-holding-allocation-preview" class="text-tertiary" style="font-size:var(--text-xs);margin-top:2px;"></div>
+              </div>
             </div>
             <button id="setup-add-holding-btn" class="btn btn-primary btn-sm" style="width:100%;">+ Agregar Holding</button>
           </div>
@@ -579,8 +590,16 @@
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md);">
           <div class="form-group">
-            <label class="form-label">Asignación (%) *</label>
-            <input type="number" class="form-input" id="add-allocation" step="0.1" min="0" max="100" placeholder="Ej: 5.0" />
+            <label class="form-label">Asignación *</label>
+            <div style="display:flex; gap:4px;">
+              <select id="add-input-mode" class="form-select" style="width:80px;flex-shrink:0;font-size:var(--text-xs);padding:4px 6px;">
+                <option value="percent">%</option>
+                <option value="USD">USD</option>
+                <option value="CLP">CLP</option>
+              </select>
+              <input type="number" class="form-input" id="add-allocation" step="0.1" min="0" placeholder="Ej: 5.0" />
+            </div>
+            <div id="add-allocation-preview" class="text-tertiary" style="font-size:var(--text-xs);margin-top:2px;"></div>
           </div>
           <div class="form-group">
             <label class="form-label">Sector</label>
