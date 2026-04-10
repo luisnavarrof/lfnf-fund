@@ -594,27 +594,34 @@ async function autoDetectSectors() {
     'Miscellaneous': 'Other',
   };
 
+  let updated = false;
   for (const holding of portfolio.holdings) {
     // Only auto-detect for individual stocks/funds, not ETFs (ETFs get sector from decomposition)
     if (holding.type === 'ETF') continue;
     // Skip if sector is already set from SECTOR_LOOKUP
     if (SECTOR_LOOKUP[holding.ticker]) {
-      holding.sector = SECTOR_LOOKUP[holding.ticker];
+      if (holding.sector !== SECTOR_LOOKUP[holding.ticker]) {
+        holding.sector = SECTOR_LOOKUP[holding.ticker];
+        updated = true;
+      }
       continue;
     }
+    // Skip if sector is already set and isn't the default "Other"
+    if (holding.sector && holding.sector !== 'Other' && holding.sector !== 'Auto') continue;
     try {
       const profile = await getCompanyProfile(holding.ticker);
       if (profile && profile.finnhubIndustry) {
         const mapped = industryToSector[profile.finnhubIndustry];
         if (mapped) {
           holding.sector = mapped;
+          updated = true;
         }
       }
     } catch (e) {
       // Silently continue
     }
   }
-  savePortfolio(portfolio);
+  if (updated) savePortfolio(portfolio);
 }
 
 /**
@@ -1089,9 +1096,10 @@ async function renderPerformanceChart() {
     }
 
     // Build a date-aligned weighted return
-    if (Object.keys(holdingCandles).length > 0) {
+    const candleValues = Object.values(holdingCandles);
+    if (candleValues.length > 0) {
       // Find common dates (dates where ALL contributing holdings have data)
-      const dateSets = Object.values(holdingCandles).map(c => new Set(c.map(d => d.time)));
+      const dateSets = candleValues.map(c => new Set(c.map(d => d.time)));
       let commonDates = [...dateSets[0]];
       for (let i = 1; i < dateSets.length; i++) {
         commonDates = commonDates.filter(d => dateSets[i].has(d));
