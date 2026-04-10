@@ -44,12 +44,14 @@ let isLoading = false;
 let demoMode = false;
 let decomposedHoldings = [];
 let realSectors = {};
+let displayCurrency = localStorage.getItem('lfnf_display_currency') || 'CLP'; // 'CLP' or 'USD'
 
 // Chart instances
 let allocationChart = null;
 let sectorChart = null;
 let sectorDetailChart = null;
 let performanceChart = null;
+let allHoldingsPerfChart = null;
 let contributionChartInstance = null;
 let holdingPerfChart = null;
 let selectedHoldingPerfTicker = null;
@@ -144,6 +146,46 @@ function escHtml(str) {
     .replace(/'/g, '&#x27;');
 }
 
+/**
+ * Convert an allocation input to a percentage value.
+ * @param {string} mode - 'percent', 'USD', or 'CLP'
+ * @param {number} value - The raw input value
+ * @param {number} totalCLP - The total portfolio value in CLP
+ * @param {number} rate - USD/CLP exchange rate
+ * @returns {number} allocation as a percentage (0-100)
+ */
+function convertToPercent(mode, value, totalCLP, rate) {
+  if (mode === 'percent') return value;
+  if (mode === 'USD') {
+    const amountCLP = value * rate;
+    return totalCLP > 0 ? (amountCLP / totalCLP) * 100 : 0;
+  }
+  if (mode === 'CLP') {
+    return totalCLP > 0 ? (value / totalCLP) * 100 : 0;
+  }
+  return value;
+}
+
+/**
+ * Get a human-readable preview of the allocation conversion.
+ */
+function getAllocationPreview(mode, value, totalCLP, rate) {
+  if (isNaN(value) || value <= 0) return '';
+  if (mode === 'percent') {
+    const amountCLP = (value / 100) * totalCLP;
+    const amountUSD = amountCLP / rate;
+    return `≈ ${formatCLP(amountCLP)} / ${formatUSD(amountUSD)}`;
+  }
+  const pct = convertToPercent(mode, value, totalCLP, rate);
+  if (mode === 'USD') {
+    return `≈ ${pct.toFixed(1)}% del portafolio (${formatCLP(value * rate)})`;
+  }
+  if (mode === 'CLP') {
+    return `≈ ${pct.toFixed(1)}% del portafolio (${formatUSD(value / rate)})`;
+  }
+  return '';
+}
+
 // Temporary holdings list for onboarding wizard step 3
 let setupHoldings = [];
 
@@ -219,17 +261,28 @@ function initSetup() {
     const ticker = document.getElementById('setup-holding-ticker').value.trim().toUpperCase();
     const name = document.getElementById('setup-holding-name').value.trim();
     const type = document.getElementById('setup-holding-type').value || 'Stock';
-    const allocation = parseFloat(document.getElementById('setup-holding-allocation').value);
+    const rawValue = parseFloat(document.getElementById('setup-holding-allocation').value);
+    const inputMode = document.getElementById('setup-holding-input-mode').value;
     const sector = document.getElementById('setup-holding-sector').value;
-    if (!ticker || !name || isNaN(allocation) || allocation <= 0) {
-      showToast('❌ Selecciona un activo y escribe un % válido', 'error');
+
+    if (!ticker || !name || isNaN(rawValue) || rawValue <= 0) {
+      showToast('❌ Selecciona un activo y escribe un valor válido', 'error');
       return;
     }
+
+    const totalCLP = portfolio.fund.totalValueCLP || 1;
+    const allocation = convertToPercent(inputMode, rawValue, totalCLP, usdClpRate);
+
+    if (allocation <= 0 || allocation > 100) {
+      showToast('❌ La asignación debe estar entre 0% y 100%', 'error');
+      return;
+    }
+
     if (setupHoldings.some(h => h.ticker === ticker)) {
       showToast('❌ Este ticker ya fue agregado', 'error');
       return;
     }
-    setupHoldings.push({ ticker, name, shortName: ticker, type, allocation, sector });
+    setupHoldings.push({ ticker, name, shortName: ticker, type, allocation: parseFloat(allocation.toFixed(1)), sector });
     renderSetupHoldingsList();
     // Clear search
     document.getElementById('setup-symbol-search').value = '';
@@ -238,8 +291,22 @@ function initSetup() {
     document.getElementById('setup-holding-type').value = 'Stock';
     document.getElementById('setup-selected-symbol').style.display = 'none';
     document.getElementById('setup-holding-allocation').value = '';
+    document.getElementById('setup-holding-allocation-preview').textContent = '';
     document.getElementById('setup-holding-allocation').focus();
   });
+
+  // Live preview for allocation input
+  const setupAllocInput = document.getElementById('setup-holding-allocation');
+  const setupAllocMode = document.getElementById('setup-holding-input-mode');
+  const setupAllocPreview = document.getElementById('setup-holding-allocation-preview');
+  function updateSetupAllocPreview() {
+    const val = parseFloat(setupAllocInput.value);
+    const mode = setupAllocMode.value;
+    const totalCLP = portfolio.fund.totalValueCLP || 1;
+    setupAllocPreview.textContent = getAllocationPreview(mode, val, totalCLP, usdClpRate);
+  }
+  setupAllocInput?.addEventListener('input', updateSetupAllocPreview);
+  setupAllocMode?.addEventListener('change', updateSetupAllocPreview);
 
   // Step 3: Finish
   document.getElementById('setup-finish-btn').addEventListener('click', () => {
@@ -416,12 +483,21 @@ function renderSummaryCards() {
   if (!summary) return;
   const liveTotal = summary.liveTotalCLP;
   const liveTotalUSD = summary.liveTotalUSD;
-  animateValue('total-value-clp', formatCLP(liveTotal));
-  document.getElementById('total-value-usd').textContent = `≈ ${formatUSD(liveTotalUSD)}`;
+
+  if (displayCurrency === 'USD') {
+    animateValue('total-value-primary', formatUSD(liveTotalUSD));
+    document.getElementById('total-value-secondary').textContent = `≈ ${formatCLP(liveTotal)}`;
+  } else {
+    animateValue('total-value-primary', formatCLP(liveTotal));
+    document.getElementById('total-value-secondary').textContent = `≈ ${formatUSD(liveTotalUSD)}`;
+  }
+
   // Show base value if it differs from live total
   const baseEl = document.getElementById('total-value-base');
   if (Math.abs(liveTotal - summary.totalCLP) > 1) {
-    baseEl.textContent = `Base: ${formatCLP(summary.totalCLP)}`;
+    baseEl.textContent = displayCurrency === 'USD'
+      ? `Base: ${formatUSD(summary.totalUSD)}`
+      : `Base: ${formatCLP(summary.totalCLP)}`;
     baseEl.style.display = '';
   } else {
     baseEl.style.display = 'none';
@@ -430,8 +506,13 @@ function renderSummaryCards() {
   const changeEl = document.getElementById('daily-change');
   changeEl.textContent = formatPercent(summary.dailyChangePercent);
   changeEl.className = `summary-card-value ${gainLossClass(summary.dailyChangePercent)}`;
-  document.getElementById('daily-change-clp').textContent = `${summary.dailyChangeCLP >= 0 ? '+' : ''}${formatCLP(summary.dailyChangeCLP)}`;
-  document.getElementById('daily-change-clp').className = `summary-card-sub ${gainLossClass(summary.dailyChangeCLP)}`;
+
+  const changeAmount = displayCurrency === 'USD' ? summary.dailyChangeUSD : summary.dailyChangeCLP;
+  const changeFormatted = displayCurrency === 'USD'
+    ? `${changeAmount >= 0 ? '+' : ''}${formatUSD(changeAmount)}`
+    : `${changeAmount >= 0 ? '+' : ''}${formatCLP(changeAmount)}`;
+  document.getElementById('daily-change-amount').textContent = changeFormatted;
+  document.getElementById('daily-change-amount').className = `summary-card-sub ${gainLossClass(changeAmount)}`;
 
   document.getElementById('holdings-count').textContent = summary.holdingsCount;
   const fundCount = enrichedHoldings.filter(h => h.type === 'Fund').length;
@@ -481,7 +562,7 @@ function renderAllocationChart() {
   });
   const legendEl = document.getElementById('allocation-legend');
   legendEl.innerHTML = sorted.map((h, i) => `
-    <div class="legend-row"><div class="legend-row-left"><div class="legend-color" style="background:${HOLDING_COLORS[i % HOLDING_COLORS.length]}"></div><span class="legend-label">${h.shortName || h.ticker}</span></div><span class="legend-value">${formatPercentAbs(h.allocation)}</span></div>
+    <div class="legend-row"><div class="legend-row-left"><div class="legend-color" style="background:${HOLDING_COLORS[i % HOLDING_COLORS.length]}"></div><span class="legend-label"><strong>${escHtml(h.ticker)}</strong> <span class="text-tertiary" style="font-size:var(--text-xs);">${escHtml(h.name)}</span></span></div><span class="legend-value">${formatPercentAbs(h.allocation)}</span></div>
   `).join('');
   document.getElementById('allocation-center-count').textContent = enrichedHoldings.length;
 }
@@ -495,25 +576,36 @@ function renderSectorChart() {
   const sectorEntries = Object.entries(realSectors).sort((a, b) => b[1].allocation - a[1].allocation);
   if (sectorChart) sectorChart.destroy();
   sectorChart = new Chart(ctx, {
-    type: 'polarArea',
+    type: 'bar',
     data: {
       labels: sectorEntries.map(([name]) => name),
-      datasets: [{ data: sectorEntries.map(([, d]) => d.allocation), backgroundColor: sectorEntries.map(([name]) => getSectorColor(name) + '50'), borderColor: sectorEntries.map(([name]) => getSectorColor(name)), borderWidth: 1.5 }],
+      datasets: [{
+        data: sectorEntries.map(([, d]) => d.allocation),
+        backgroundColor: sectorEntries.map(([name]) => getSectorColor(name) + '80'),
+        borderColor: sectorEntries.map(([name]) => getSectorColor(name)),
+        borderWidth: 1,
+        borderRadius: 6,
+        barPercentage: 0.7,
+        categoryPercentage: 0.85,
+      }],
     },
     options: {
-      responsive: true, maintainAspectRatio: true,
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
       plugins: {
         legend: { display: false },
         tooltip: { backgroundColor: 'rgba(17, 17, 25, 0.95)', titleColor: '#f1f5f9', bodyColor: '#94a3b8', borderColor: 'rgba(148,163,184,0.12)', borderWidth: 1, cornerRadius: 8, padding: 12,
           callbacks: { label: (ctx) => { const [name, data] = sectorEntries[ctx.dataIndex]; return `${name}: ${formatPercentAbs(data.allocation)} (${data.count} acciones)`; } },
         },
       },
-      scales: { r: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(148,163,184,0.06)' }, ticks: { color: '#64748b', font: { size: 10 }, callback: (v) => v.toFixed(0) + '%' }, beginAtZero: true },
+        y: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11, weight: 500 } } },
+      },
       animation: { duration: 800, easing: 'easeOutQuart' },
     },
   });
   const listEl = document.getElementById('sector-list');
-  listEl.innerHTML = sectorEntries.slice(0, 8).map(([name, data]) => `
+  listEl.innerHTML = sectorEntries.map(([name, data]) => `
     <div class="sector-item"><div class="sector-info"><div class="sector-dot" style="background:${getSectorColor(name)}"></div><span class="sector-name">${name}<span class="sector-count">(${data.count})</span></span></div><span class="sector-percentage">${formatPercentAbs(data.allocation)}</span></div>
   `).join('');
 }
@@ -550,7 +642,7 @@ function createHoldingRow(h, showSector) {
       <td><span class="holding-change ${changeClass}">${changeDisplay}</span></td>
       ${sectorCell}
       <td><div class="holding-allocation-bar"><div class="allocation-bar"><div class="allocation-bar-fill" style="width:${allocationWidth}%"></div></div><span class="allocation-value">${formatPercentAbs(h.allocation)}</span></div></td>
-      <td><div><div class="holding-value-clp">${formatCLP(h.valueCLP)}</div><div class="holding-value-usd">≈ ${formatUSD(h.valueUSD)}</div></div></td>
+      <td><div><div class="holding-value-clp">${displayCurrency === 'USD' ? formatUSD(h.valueUSD) : formatCLP(h.valueCLP)}</div><div class="holding-value-usd">≈ ${displayCurrency === 'USD' ? formatCLP(h.valueCLP) : formatUSD(h.valueUSD)}</div></div></td>
       ${actionsCell}
     </tr>`;
 }
@@ -741,6 +833,7 @@ function createNewsItem(news) {
 // ============================================
 function renderPerformanceTab() {
   try { renderPerformanceChart(); } catch(e) { console.warn('Perf chart:', e); }
+  try { renderAllHoldingsPerfChart(); } catch(e) { console.warn('All holdings perf chart:', e); }
   renderContributionChart();
   renderTopMovers();
   renderHoldingPerfSelector();
@@ -770,8 +863,13 @@ function renderPerformanceChart() {
     handleScroll: true, handleScale: true,
   });
 
-  // Start from fund inception date
-  const inceptionDate = portfolio.fund.inceptionDate || '2026-04-09';
+  // Find the earliest holding addedDate as fund inception
+  const holdingDates = portfolio.holdings
+    .map(h => h.addedDate)
+    .filter(d => d)
+    .sort();
+  const inceptionDate = holdingDates.length > 0 ? holdingDates[0] : (portfolio.fund.inceptionDate || '2026-04-09');
+
   const lfnfData = generateDeterministicPerformance(42, 0.0007, 0.015, inceptionDate);
   const spyData = generateDeterministicPerformance(123, 0.0004, 0.012, inceptionDate);
 
@@ -804,6 +902,67 @@ function renderPerformanceChart() {
 
   chart.timeScale().fitContent();
   performanceChart = chart;
+
+  const resizeObserver = new ResizeObserver(() => { chart.applyOptions({ width: container.clientWidth, height: container.clientHeight }); });
+  resizeObserver.observe(container);
+}
+
+/**
+ * Render all holdings performance lines on a single chart.
+ * Each holding starts from its addedDate, showing % return normalized to 0%.
+ */
+function renderAllHoldingsPerfChart() {
+  const container = document.getElementById('all-holdings-perf-container');
+  const legendEl = document.getElementById('all-holdings-perf-legend');
+  if (!container) return;
+
+  container.innerHTML = '';
+  if (allHoldingsPerfChart) { try { allHoldingsPerfChart.remove(); } catch(e) {} allHoldingsPerfChart = null; }
+
+  const chart = createChart(container, {
+    width: container.clientWidth || 800, height: 350,
+    layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: '#94a3b8', fontFamily: "'Inter', sans-serif", fontSize: 11 },
+    grid: { vertLines: { color: 'rgba(148,163,184,0.05)' }, horzLines: { color: 'rgba(148,163,184,0.05)' } },
+    crosshair: { vertLine: { color: 'rgba(59,130,246,0.3)', width: 1, style: LineStyle.Dashed }, horzLine: { color: 'rgba(59,130,246,0.3)', width: 1, style: LineStyle.Dashed } },
+    rightPriceScale: { borderColor: 'rgba(148,163,184,0.1)' },
+    timeScale: { borderColor: 'rgba(148,163,184,0.1)', timeVisible: false },
+    handleScroll: true, handleScale: true,
+  });
+
+  const inceptionDate = portfolio.fund.inceptionDate || '2026-04-09';
+  const sorted = [...portfolio.holdings].sort((a, b) => (a.addedDate || inceptionDate).localeCompare(b.addedDate || inceptionDate));
+
+  // Generate a line for each holding
+  const legendParts = [];
+  sorted.forEach((h, i) => {
+    const color = HOLDING_COLORS[i % HOLDING_COLORS.length];
+    const startDate = h.addedDate || inceptionDate;
+    const seed = h.ticker.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    const enriched = enrichedHoldings.find(eh => eh.ticker === h.ticker);
+    const dailyReturn = (enriched?.changePercent || 0) * 0.0001 + 0.0003;
+    const volatility = 0.018;
+
+    const data = generateDeterministicPerformance(seed, dailyReturn, volatility, startDate);
+
+    const series = chart.addSeries(LineSeries, {
+      color: color,
+      lineWidth: 1.5,
+      priceFormat: { type: 'percent' },
+      lastValueVisible: false,
+      priceLineVisible: false,
+    });
+    series.setData(data);
+
+    legendParts.push(`<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;background:var(--bg-surface);border-radius:var(--radius-sm);border:1px solid var(--border-subtle);font-size:var(--text-xs);">
+      <div style="width:10px;height:3px;background:${color};border-radius:2px;"></div>
+      <span class="font-bold">${escHtml(h.ticker)}</span>
+    </div>`);
+  });
+
+  if (legendEl) legendEl.innerHTML = legendParts.join('');
+
+  chart.timeScale().fitContent();
+  allHoldingsPerfChart = chart;
 
   const resizeObserver = new ResizeObserver(() => { chart.applyOptions({ width: container.clientWidth, height: container.clientHeight }); });
   resizeObserver.observe(container);
@@ -1142,7 +1301,411 @@ const DEMO_SYMBOLS = [
   { symbol: 'XLE', description: 'Energy Select Sector SPDR', type: 'ETP' },
   { symbol: 'TSEM', description: 'Tower Semiconductor Ltd.', type: 'Common Stock' },
   { symbol: 'MU', description: 'Micron Technology, Inc.', type: 'Common Stock' },
+  { symbol: 'EEM', description: 'iShares MSCI Emerging Markets ETF', type: 'ETP' },
+  { symbol: 'IEMG', description: 'iShares Core MSCI Emerging Markets ETF', type: 'ETP' },
+  { symbol: 'VEA', description: 'Vanguard FTSE Developed Markets ETF', type: 'ETP' },
+  { symbol: 'EFA', description: 'iShares MSCI EAFE ETF', type: 'ETP' },
+  { symbol: 'VXUS', description: 'Vanguard Total International Stock ETF', type: 'ETP' },
+  { symbol: 'BND', description: 'Vanguard Total Bond Market ETF', type: 'ETP' },
+  { symbol: 'AGG', description: 'iShares Core U.S. Aggregate Bond ETF', type: 'ETP' },
+  { symbol: 'TIP', description: 'iShares TIPS Bond ETF', type: 'ETP' },
+  { symbol: 'LQD', description: 'iShares iBoxx $ Investment Grade Corporate Bond ETF', type: 'ETP' },
+  { symbol: 'HYG', description: 'iShares iBoxx $ High Yield Corporate Bond ETF', type: 'ETP' },
+  { symbol: 'VNQ', description: 'Vanguard Real Estate ETF', type: 'ETP' },
+  { symbol: 'SCHD', description: 'Schwab U.S. Dividend Equity ETF', type: 'ETP' },
+  { symbol: 'JEPI', description: 'JPMorgan Equity Premium Income ETF', type: 'ETP' },
+  { symbol: 'JEPQ', description: 'JPMorgan Nasdaq Equity Premium Income ETF', type: 'ETP' },
+  { symbol: 'DIA', description: 'SPDR Dow Jones Industrial Average ETF', type: 'ETP' },
+  { symbol: 'IWM', description: 'iShares Russell 2000 ETF', type: 'ETP' },
+  { symbol: 'IWF', description: 'iShares Russell 1000 Growth ETF', type: 'ETP' },
+  { symbol: 'IWD', description: 'iShares Russell 1000 Value ETF', type: 'ETP' },
+  { symbol: 'VIG', description: 'Vanguard Dividend Appreciation ETF', type: 'ETP' },
+  { symbol: 'VYM', description: 'Vanguard High Dividend Yield ETF', type: 'ETP' },
+  { symbol: 'DVY', description: 'iShares Select Dividend ETF', type: 'ETP' },
+  { symbol: 'VT', description: 'Vanguard Total World Stock ETF', type: 'ETP' },
+  { symbol: 'ACWI', description: 'iShares MSCI ACWI ETF', type: 'ETP' },
+  { symbol: 'EWJ', description: 'iShares MSCI Japan ETF', type: 'ETP' },
+  { symbol: 'EWZ', description: 'iShares MSCI Brazil ETF', type: 'ETP' },
+  { symbol: 'FXI', description: 'iShares China Large-Cap ETF', type: 'ETP' },
+  { symbol: 'INDA', description: 'iShares MSCI India ETF', type: 'ETP' },
+  { symbol: 'EWT', description: 'iShares MSCI Taiwan ETF', type: 'ETP' },
+  { symbol: 'KRE', description: 'SPDR S&P Regional Banking ETF', type: 'ETP' },
+  { symbol: 'XLI', description: 'Industrial Select Sector SPDR', type: 'ETP' },
+  { symbol: 'XLU', description: 'Utilities Select Sector SPDR', type: 'ETP' },
+  { symbol: 'XLP', description: 'Consumer Staples Select Sector SPDR', type: 'ETP' },
+  { symbol: 'XLY', description: 'Consumer Discretionary Select Sector SPDR', type: 'ETP' },
+  { symbol: 'XLB', description: 'Materials Select Sector SPDR', type: 'ETP' },
+  { symbol: 'XLC', description: 'Communication Services Select Sector SPDR', type: 'ETP' },
+  { symbol: 'XLRE', description: 'Real Estate Select Sector SPDR', type: 'ETP' },
+  { symbol: 'IYR', description: 'iShares U.S. Real Estate ETF', type: 'ETP' },
+  { symbol: 'ARKG', description: 'ARK Genomic Revolution ETF', type: 'ETP' },
+  { symbol: 'ARKW', description: 'ARK Next Generation Internet ETF', type: 'ETP' },
+  { symbol: 'ARKQ', description: 'ARK Autonomous Technology & Robotics ETF', type: 'ETP' },
+  { symbol: 'ICLN', description: 'iShares Global Clean Energy ETF', type: 'ETP' },
+  { symbol: 'TAN', description: 'Invesco Solar ETF', type: 'ETP' },
+  { symbol: 'PBW', description: 'Invesco WilderHill Clean Energy ETF', type: 'ETP' },
+  { symbol: 'KWEB', description: 'KraneShares CSI China Internet ETF', type: 'ETP' },
+  { symbol: 'MCHI', description: 'iShares MSCI China ETF', type: 'ETP' },
+  { symbol: 'BITO', description: 'ProShares Bitcoin Strategy ETF', type: 'ETP' },
+  { symbol: 'IBIT', description: 'iShares Bitcoin Trust ETF', type: 'ETP' },
+  { symbol: 'GBTC', description: 'Grayscale Bitcoin Trust', type: 'ETP' },
+  { symbol: 'SLV', description: 'iShares Silver Trust', type: 'ETP' },
+  { symbol: 'IAU', description: 'iShares Gold Trust', type: 'ETP' },
+  { symbol: 'DBA', description: 'Invesco DB Agriculture Fund', type: 'ETP' },
+  { symbol: 'USO', description: 'United States Oil Fund', type: 'ETP' },
+  { symbol: 'UNG', description: 'United States Natural Gas Fund', type: 'ETP' },
+  { symbol: 'SOXL', description: 'Direxion Daily Semiconductor Bull 3X Shares', type: 'ETP' },
+  { symbol: 'TQQQ', description: 'ProShares UltraPro QQQ', type: 'ETP' },
+  { symbol: 'QLD', description: 'ProShares Ultra QQQ', type: 'ETP' },
+  { symbol: 'SPXL', description: 'Direxion Daily S&P 500 Bull 3X Shares', type: 'ETP' },
+  { symbol: 'VGT', description: 'Vanguard Information Technology ETF', type: 'ETP' },
+  { symbol: 'FTEC', description: 'Fidelity MSCI Information Technology Index ETF', type: 'ETP' },
+  { symbol: 'BOTZ', description: 'Global X Robotics & Artificial Intelligence ETF', type: 'ETP' },
+  { symbol: 'ROBO', description: 'ROBO Global Robotics and Automation Index ETF', type: 'ETP' },
+  { symbol: 'AIQ', description: 'Global X Artificial Intelligence & Technology ETF', type: 'ETP' },
+  { symbol: 'HACK', description: 'ETFMG Prime Cyber Security ETF', type: 'ETP' },
+  { symbol: 'CIBR', description: 'First Trust NASDAQ Cybersecurity ETF', type: 'ETP' },
+  { symbol: 'SKYY', description: 'First Trust Cloud Computing ETF', type: 'ETP' },
+  { symbol: 'CLOU', description: 'Global X Cloud Computing ETF', type: 'ETP' },
+  { symbol: 'WCLD', description: 'WisdomTree Cloud Computing Fund', type: 'ETP' },
+  { symbol: 'ESGU', description: 'iShares ESG Aware MSCI USA ETF', type: 'ETP' },
+  { symbol: 'ESGV', description: 'Vanguard ESG U.S. Stock ETF', type: 'ETP' },
+  { symbol: 'GOOG', description: 'Alphabet Inc. Class C', type: 'Common Stock' },
+  { symbol: 'INTC', description: 'Intel Corporation', type: 'Common Stock' },
+  { symbol: 'MRK', description: 'Merck & Co., Inc.', type: 'Common Stock' },
+  { symbol: 'PFE', description: 'Pfizer Inc.', type: 'Common Stock' },
+  { symbol: 'LLY', description: 'Eli Lilly and Company', type: 'Common Stock' },
+  { symbol: 'TMO', description: 'Thermo Fisher Scientific Inc.', type: 'Common Stock' },
+  { symbol: 'ABT', description: 'Abbott Laboratories', type: 'Common Stock' },
+  { symbol: 'DHR', description: 'Danaher Corporation', type: 'Common Stock' },
+  { symbol: 'BMY', description: 'Bristol-Myers Squibb Co.', type: 'Common Stock' },
+  { symbol: 'GE', description: 'GE Aerospace', type: 'Common Stock' },
+  { symbol: 'CAT', description: 'Caterpillar Inc.', type: 'Common Stock' },
+  { symbol: 'HON', description: 'Honeywell International Inc.', type: 'Common Stock' },
+  { symbol: 'DE', description: 'Deere & Company', type: 'Common Stock' },
+  { symbol: 'MMM', description: '3M Company', type: 'Common Stock' },
+  { symbol: 'UPS', description: 'United Parcel Service, Inc.', type: 'Common Stock' },
+  { symbol: 'FDX', description: 'FedEx Corporation', type: 'Common Stock' },
+  { symbol: 'DIS', description: 'The Walt Disney Company', type: 'Common Stock' },
+  { symbol: 'CMCSA', description: 'Comcast Corporation', type: 'Common Stock' },
+  { symbol: 'T', description: 'AT&T Inc.', type: 'Common Stock' },
+  { symbol: 'VZ', description: 'Verizon Communications Inc.', type: 'Common Stock' },
+  { symbol: 'PYPL', description: 'PayPal Holdings, Inc.', type: 'Common Stock' },
+  { symbol: 'SQ', description: 'Block, Inc.', type: 'Common Stock' },
+  { symbol: 'SHOP', description: 'Shopify Inc.', type: 'Common Stock' },
+  { symbol: 'SNOW', description: 'Snowflake Inc.', type: 'Common Stock' },
+  { symbol: 'NET', description: 'Cloudflare, Inc.', type: 'Common Stock' },
+  { symbol: 'DDOG', description: 'Datadog, Inc.', type: 'Common Stock' },
+  { symbol: 'ZS', description: 'Zscaler, Inc.', type: 'Common Stock' },
+  { symbol: 'CRWD', description: 'CrowdStrike Holdings, Inc.', type: 'Common Stock' },
+  { symbol: 'PANW', description: 'Palo Alto Networks, Inc.', type: 'Common Stock' },
+  { symbol: 'MDB', description: 'MongoDB, Inc.', type: 'Common Stock' },
+  { symbol: 'COIN', description: 'Coinbase Global, Inc.', type: 'Common Stock' },
+  { symbol: 'MARA', description: 'MARA Holdings, Inc.', type: 'Common Stock' },
+  { symbol: 'RIOT', description: 'Riot Platforms, Inc.', type: 'Common Stock' },
+  { symbol: 'RIVN', description: 'Rivian Automotive, Inc.', type: 'Common Stock' },
+  { symbol: 'LCID', description: 'Lucid Group, Inc.', type: 'Common Stock' },
+  { symbol: 'F', description: 'Ford Motor Company', type: 'Common Stock' },
+  { symbol: 'GM', description: 'General Motors Company', type: 'Common Stock' },
+  { symbol: 'UBER', description: 'Uber Technologies, Inc.', type: 'Common Stock' },
+  { symbol: 'LYFT', description: 'Lyft, Inc.', type: 'Common Stock' },
+  { symbol: 'ABNB', description: 'Airbnb, Inc.', type: 'Common Stock' },
+  { symbol: 'DASH', description: 'DoorDash, Inc.', type: 'Common Stock' },
+  { symbol: 'RBLX', description: 'Roblox Corporation', type: 'Common Stock' },
+  { symbol: 'U', description: 'Unity Software Inc.', type: 'Common Stock' },
+  { symbol: 'TTWO', description: 'Take-Two Interactive Software', type: 'Common Stock' },
+  { symbol: 'EA', description: 'Electronic Arts Inc.', type: 'Common Stock' },
+  { symbol: 'MTCH', description: 'Match Group, Inc.', type: 'Common Stock' },
+  { symbol: 'ZM', description: 'Zoom Video Communications', type: 'Common Stock' },
+  { symbol: 'DOCU', description: 'DocuSign, Inc.', type: 'Common Stock' },
+  { symbol: 'TWLO', description: 'Twilio Inc.', type: 'Common Stock' },
+  { symbol: 'SPOT', description: 'Spotify Technology S.A.', type: 'Common Stock' },
+  { symbol: 'SNAP', description: 'Snap Inc.', type: 'Common Stock' },
+  { symbol: 'PINS', description: 'Pinterest, Inc.', type: 'Common Stock' },
+  { symbol: 'ROKU', description: 'Roku, Inc.', type: 'Common Stock' },
+  { symbol: 'CHWY', description: 'Chewy, Inc.', type: 'Common Stock' },
+  { symbol: 'W', description: 'Wayfair Inc.', type: 'Common Stock' },
+  { symbol: 'ETSY', description: 'Etsy, Inc.', type: 'Common Stock' },
+  { symbol: 'TGT', description: 'Target Corporation', type: 'Common Stock' },
+  { symbol: 'KO', description: 'The Coca-Cola Company', type: 'Common Stock' },
+  { symbol: 'PEP', description: 'PepsiCo, Inc.', type: 'Common Stock' },
+  { symbol: 'MCD', description: 'McDonald\'s Corporation', type: 'Common Stock' },
+  { symbol: 'SBUX', description: 'Starbucks Corporation', type: 'Common Stock' },
+  { symbol: 'CMG', description: 'Chipotle Mexican Grill, Inc.', type: 'Common Stock' },
+  { symbol: 'YUM', description: 'Yum! Brands, Inc.', type: 'Common Stock' },
+  { symbol: 'CL', description: 'Colgate-Palmolive Company', type: 'Common Stock' },
+  { symbol: 'EL', description: 'The Estee Lauder Companies', type: 'Common Stock' },
+  { symbol: 'KHC', description: 'The Kraft Heinz Company', type: 'Common Stock' },
+  { symbol: 'GIS', description: 'General Mills, Inc.', type: 'Common Stock' },
+  { symbol: 'SYY', description: 'Sysco Corporation', type: 'Common Stock' },
+  { symbol: 'STZ', description: 'Constellation Brands, Inc.', type: 'Common Stock' },
+  { symbol: 'DEO', description: 'Diageo plc', type: 'Common Stock' },
+  { symbol: 'BUD', description: 'Anheuser-Busch InBev SA/NV', type: 'Common Stock' },
+  { symbol: 'PM', description: 'Philip Morris International', type: 'Common Stock' },
+  { symbol: 'MO', description: 'Altria Group, Inc.', type: 'Common Stock' },
+  { symbol: 'CARR', description: 'Carrier Global Corporation', type: 'Common Stock' },
+  { symbol: 'JCI', description: 'Johnson Controls International', type: 'Common Stock' },
+  { symbol: 'EMR', description: 'Emerson Electric Co.', type: 'Common Stock' },
+  { symbol: 'ROK', description: 'Rockwell Automation, Inc.', type: 'Common Stock' },
+  { symbol: 'APH', description: 'Amphenol Corporation', type: 'Common Stock' },
+  { symbol: 'TEL', description: 'TE Connectivity Ltd.', type: 'Common Stock' },
+  { symbol: 'GLW', description: 'Corning Incorporated', type: 'Common Stock' },
+  { symbol: 'SHW', description: 'The Sherwin-Williams Company', type: 'Common Stock' },
+  { symbol: 'ECL', description: 'Ecolab Inc.', type: 'Common Stock' },
+  { symbol: 'APD', description: 'Air Products and Chemicals', type: 'Common Stock' },
+  { symbol: 'NUE', description: 'Nucor Corporation', type: 'Common Stock' },
+  { symbol: 'FCX', description: 'Freeport-McMoRan Inc.', type: 'Common Stock' },
+  { symbol: 'GOLD', description: 'Barrick Gold Corporation', type: 'Common Stock' },
+  { symbol: 'NEM', description: 'Newmont Corporation', type: 'Common Stock' },
+  { symbol: 'AEM', description: 'Agnico Eagle Mines Limited', type: 'Common Stock' },
+  { symbol: 'BIDU', description: 'Baidu, Inc.', type: 'Common Stock' },
+  { symbol: 'JD', description: 'JD.com, Inc.', type: 'Common Stock' },
+  { symbol: 'SE', description: 'Sea Limited', type: 'Common Stock' },
+  { symbol: 'GRAB', description: 'Grab Holdings Limited', type: 'Common Stock' },
+  { symbol: 'CPNG', description: 'Coupang, Inc.', type: 'Common Stock' },
+  { symbol: 'ASML', description: 'ASML Holding N.V.', type: 'Common Stock' },
+  { symbol: 'SAP', description: 'SAP SE', type: 'Common Stock' },
+  { symbol: 'TCOM', description: 'Trip.com Group Limited', type: 'Common Stock' },
+  { symbol: 'LULU', description: 'Lululemon Athletica Inc.', type: 'Common Stock' },
+  { symbol: 'ON', description: 'ON Semiconductor Corporation', type: 'Common Stock' },
+  { symbol: 'TER', description: 'Teradyne, Inc.', type: 'Common Stock' },
+  { symbol: 'AMAT', description: 'Applied Materials, Inc.', type: 'Common Stock' },
+  { symbol: 'KLAC', description: 'KLA Corporation', type: 'Common Stock' },
+  { symbol: 'MRVL', description: 'Marvell Technology, Inc.', type: 'Common Stock' },
+  { symbol: 'SNPS', description: 'Synopsys, Inc.', type: 'Common Stock' },
+  { symbol: 'CDNS', description: 'Cadence Design Systems, Inc.', type: 'Common Stock' },
+  { symbol: 'FTNT', description: 'Fortinet, Inc.', type: 'Common Stock' },
+  { symbol: 'SSNLF', description: 'Samsung Electronics Co., Ltd.', type: 'Common Stock' },
+  { symbol: 'SONY', description: 'Sony Group Corporation', type: 'Common Stock' },
+  { symbol: 'TM', description: 'Toyota Motor Corporation', type: 'Common Stock' },
+  { symbol: 'NVO', description: 'Novo Nordisk A/S', type: 'Common Stock' },
+  { symbol: 'AZN', description: 'AstraZeneca PLC', type: 'Common Stock' },
+  { symbol: 'GSK', description: 'GSK plc', type: 'Common Stock' },
+  { symbol: 'SHEL', description: 'Shell plc', type: 'Common Stock' },
+  { symbol: 'BP', description: 'BP p.l.c.', type: 'Common Stock' },
+  { symbol: 'RIO', description: 'Rio Tinto Group', type: 'Common Stock' },
+  { symbol: 'BHP', description: 'BHP Group Limited', type: 'Common Stock' },
+  { symbol: 'SAN', description: 'Banco Santander, S.A.', type: 'Common Stock' },
+  { symbol: 'UBS', description: 'UBS Group AG', type: 'Common Stock' },
+  { symbol: 'DB', description: 'Deutsche Bank AG', type: 'Common Stock' },
+  { symbol: 'ING', description: 'ING Groep N.V.', type: 'Common Stock' },
+  { symbol: 'HSBC', description: 'HSBC Holdings plc', type: 'Common Stock' },
+  { symbol: 'BBVA', description: 'Banco Bilbao Vizcaya Argentaria', type: 'Common Stock' },
+  { symbol: 'NIO', description: 'NIO Inc.', type: 'Common Stock' },
+  { symbol: 'XPEV', description: 'XPeng Inc.', type: 'Common Stock' },
+  { symbol: 'LI', description: 'Li Auto Inc.', type: 'Common Stock' },
+  { symbol: 'WBD', description: 'Warner Bros. Discovery, Inc.', type: 'Common Stock' },
+  { symbol: 'LOGI', description: 'Logitech International S.A.', type: 'Common Stock' },
+  { symbol: 'ABB', description: 'ABB Ltd.', type: 'Common Stock' },
+  { symbol: 'SIEGY', description: 'Siemens AG', type: 'Common Stock' },
+  { symbol: 'NSRGY', description: 'Nestlé S.A.', type: 'Common Stock' },
+  { symbol: 'RHHBY', description: 'Roche Holding AG', type: 'Common Stock' },
+  { symbol: 'VOD', description: 'Vodafone Group plc', type: 'Common Stock' },
+  { symbol: 'BTI', description: 'British American Tobacco plc', type: 'Common Stock' },
+  { symbol: 'ARM', description: 'Arm Holdings plc', type: 'Common Stock' },
+  { symbol: 'SWK', description: 'Stanley Black & Decker, Inc.', type: 'Common Stock' },
 ];
+
+const SECTOR_LOOKUP = {
+  // Technology
+  'AAPL': 'Technology',
+  'ADBE': 'Technology',
+  'AMAT': 'Technology',
+  'AMD': 'Technology',
+  'APH': 'Technology',
+  'ARM': 'Technology',
+  'ASML': 'Technology',
+  'AVGO': 'Technology',
+  'BIDU': 'Technology',
+  'CDNS': 'Technology',
+  'CRM': 'Technology',
+  'CRWD': 'Technology',
+  'DDOG': 'Technology',
+  'DOCU': 'Technology',
+  'DUOL': 'Technology',
+  'FTNT': 'Technology',
+  'GLW': 'Technology',
+  'GOOG': 'Technology',
+  'GOOGL': 'Technology',
+  'IBM': 'Technology',
+  'INFY': 'Technology',
+  'INTC': 'Technology',
+  'INTU': 'Technology',
+  'IONQ': 'Technology',
+  'KLAC': 'Technology',
+  'LOGI': 'Technology',
+  'MDB': 'Technology',
+  'META': 'Technology',
+  'MRVL': 'Technology',
+  'MSFT': 'Technology',
+  'MU': 'Technology',
+  'NBIS': 'Technology',
+  'NET': 'Technology',
+  'NFLX': 'Technology',
+  'NVDA': 'Technology',
+  'ON': 'Technology',
+  'ORCL': 'Technology',
+  'PANW': 'Technology',
+  'PLTR': 'Technology',
+  'QCOM': 'Technology',
+  'SAP': 'Technology',
+  'SHOP': 'Technology',
+  'SIEGY': 'Technology',
+  'SNOW': 'Technology',
+  'SNPS': 'Technology',
+  'SONY': 'Technology',
+  'SPOT': 'Technology',
+  'SSNLF': 'Technology',
+  'TCEHY': 'Technology',
+  'TEL': 'Technology',
+  'TER': 'Technology',
+  'TSEM': 'Technology',
+  'TSM': 'Technology',
+  'TWLO': 'Technology',
+  'ZM': 'Technology',
+  'ZS': 'Technology',
+  // Healthcare
+  'ABBV': 'Healthcare',
+  'ABT': 'Healthcare',
+  'AZN': 'Healthcare',
+  'BMY': 'Healthcare',
+  'DHR': 'Healthcare',
+  'GSK': 'Healthcare',
+  'ISRG': 'Healthcare',
+  'JNJ': 'Healthcare',
+  'LLY': 'Healthcare',
+  'MRK': 'Healthcare',
+  'NVO': 'Healthcare',
+  'PFE': 'Healthcare',
+  'RHHBY': 'Healthcare',
+  'TMO': 'Healthcare',
+  'UNH': 'Healthcare',
+  // Financials
+  'BAC': 'Financials',
+  'BBVA': 'Financials',
+  'COIN': 'Financials',
+  'DB': 'Financials',
+  'GS': 'Financials',
+  'HSBC': 'Financials',
+  'ING': 'Financials',
+  'JPM': 'Financials',
+  'KKR': 'Financials',
+  'MA': 'Financials',
+  'MS': 'Financials',
+  'PYPL': 'Financials',
+  'SAN': 'Financials',
+  'SQ': 'Financials',
+  'UBS': 'Financials',
+  'V': 'Financials',
+  'WFC': 'Financials',
+  // Consumer Discretionary
+  'ABNB': 'Consumer Discretionary',
+  'AMZN': 'Consumer Discretionary',
+  'BABA': 'Consumer Discretionary',
+  'CHWY': 'Consumer Discretionary',
+  'CMG': 'Consumer Discretionary',
+  'COST': 'Consumer Discretionary',
+  'CPNG': 'Consumer Discretionary',
+  'DASH': 'Consumer Discretionary',
+  'DIS': 'Consumer Discretionary',
+  'EA': 'Consumer Discretionary',
+  'ETSY': 'Consumer Discretionary',
+  'F': 'Consumer Discretionary',
+  'GM': 'Consumer Discretionary',
+  'GRAB': 'Consumer Discretionary',
+  'HD': 'Consumer Discretionary',
+  'JD': 'Consumer Discretionary',
+  'LCID': 'Consumer Discretionary',
+  'LI': 'Consumer Discretionary',
+  'LULU': 'Consumer Discretionary',
+  'LYFT': 'Consumer Discretionary',
+  'MCD': 'Consumer Discretionary',
+  'MELI': 'Consumer Discretionary',
+  'MTCH': 'Consumer Discretionary',
+  'NIO': 'Consumer Discretionary',
+  'NKE': 'Consumer Discretionary',
+  'PDD': 'Consumer Discretionary',
+  'PINS': 'Consumer Discretionary',
+  'RBLX': 'Consumer Discretionary',
+  'RIVN': 'Consumer Discretionary',
+  'ROKU': 'Consumer Discretionary',
+  'SBUX': 'Consumer Discretionary',
+  'SE': 'Consumer Discretionary',
+  'SNAP': 'Consumer Discretionary',
+  'TCOM': 'Consumer Discretionary',
+  'TGT': 'Consumer Discretionary',
+  'TM': 'Consumer Discretionary',
+  'TSLA': 'Consumer Discretionary',
+  'TTWO': 'Consumer Discretionary',
+  'U': 'Consumer Discretionary',
+  'UBER': 'Consumer Discretionary',
+  'W': 'Consumer Discretionary',
+  'WBD': 'Consumer Discretionary',
+  'XPEV': 'Consumer Discretionary',
+  'YUM': 'Consumer Discretionary',
+  // Consumer Staples
+  'BTI': 'Consumer Staples',
+  'BUD': 'Consumer Staples',
+  'CL': 'Consumer Staples',
+  'DEO': 'Consumer Staples',
+  'EL': 'Consumer Staples',
+  'GIS': 'Consumer Staples',
+  'KHC': 'Consumer Staples',
+  'KO': 'Consumer Staples',
+  'MO': 'Consumer Staples',
+  'NSRGY': 'Consumer Staples',
+  'PEP': 'Consumer Staples',
+  'PG': 'Consumer Staples',
+  'PM': 'Consumer Staples',
+  'STZ': 'Consumer Staples',
+  'SYY': 'Consumer Staples',
+  'WMT': 'Consumer Staples',
+  // Energy
+  'BP': 'Energy',
+  'MARA': 'Energy',
+  'OKLO': 'Energy',
+  'RIOT': 'Energy',
+  'SHEL': 'Energy',
+  'XOM': 'Energy',
+  // Aerospace & Defense
+  'BA': 'Aerospace & Defense',
+  'GD': 'Aerospace & Defense',
+  'LMT': 'Aerospace & Defense',
+  'NOC': 'Aerospace & Defense',
+  'RTX': 'Aerospace & Defense',
+  // Materials
+  'AEM': 'Materials',
+  'APD': 'Materials',
+  'BHP': 'Materials',
+  'ECL': 'Materials',
+  'FCX': 'Materials',
+  'GOLD': 'Materials',
+  'LIN': 'Materials',
+  'NEM': 'Materials',
+  'NUE': 'Materials',
+  'RIO': 'Materials',
+  'SHW': 'Materials',
+  'VALE': 'Materials',
+  // Telecom
+  'CMCSA': 'Telecom',
+  'T': 'Telecom',
+  'VOD': 'Telecom',
+  'VZ': 'Telecom',
+  // Other
+  'ABB': 'Other',
+  'CARR': 'Other',
+  'CAT': 'Other',
+  'DE': 'Other',
+  'EMR': 'Other',
+  'FDX': 'Other',
+  'GE': 'Other',
+  'HON': 'Other',
+  'JCI': 'Other',
+  'MMM': 'Other',
+  'ROK': 'Other',
+  'SWK': 'Other',
+  'UPS': 'Other',
+};
 
 function mapFinnhubType(type) {
   if (!type) return 'Stock';
@@ -1188,6 +1751,15 @@ function initSymbolSearch(searchId, resultsId, chipId, tickerHiddenId, nameHidde
     chipEl.style.display = 'flex';
     searchEl.value = '';
     resultsEl.style.display = 'none';
+
+    // Auto-set sector if we have a lookup
+    const sectorLookup = SECTOR_LOOKUP[ticker];
+    if (sectorLookup) {
+      const setupSector = document.getElementById('setup-holding-sector');
+      const addSector = document.getElementById('add-sector');
+      if (setupSector) setupSector.value = sectorLookup;
+      if (addSector) addSector.value = sectorLookup;
+    }
 
     chipEl.querySelector('.chip-clear').addEventListener('click', () => {
       chipEl.style.display = 'none';
@@ -1302,6 +1874,7 @@ function switchTab(tabName) {
   if (tabName === 'performance') {
     setTimeout(() => {
       try { renderPerformanceChart(); } catch(e) {}
+      try { renderAllHoldingsPerfChart(); } catch(e) {}
       renderHoldingPerfSelector();
     }, 50);
   }
@@ -1368,30 +1941,56 @@ function initHoldingsInteractions() {
 // MODALS
 // ============================================
 function initModals() {
+  // Currency toggle
+  document.getElementById('btn-toggle-currency')?.addEventListener('click', () => {
+    displayCurrency = displayCurrency === 'CLP' ? 'USD' : 'CLP';
+    localStorage.setItem('lfnf_display_currency', displayCurrency);
+    renderSummaryCards();
+    renderFullHoldings();
+    showToast(`💱 Moneda cambiada a ${displayCurrency}`, 'info');
+  });
+
   // Edit Total Value
   document.getElementById('btn-edit-total')?.addEventListener('click', () => {
     const editInline = document.getElementById('total-edit-inline');
     const input = document.getElementById('total-edit-input');
+    const currencySelect = document.getElementById('total-edit-currency');
     editInline.style.display = editInline.style.display === 'none' ? 'flex' : 'none';
     if (editInline.style.display !== 'none') {
+      currencySelect.value = 'CLP';
       input.value = portfolio.fund.totalValueCLP;
       input.focus();
       input.select();
     }
   });
+  // When currency changes in the edit, convert the displayed value
+  document.getElementById('total-edit-currency')?.addEventListener('change', () => {
+    const curr = document.getElementById('total-edit-currency').value;
+    const input = document.getElementById('total-edit-input');
+    if (curr === 'USD') {
+      input.value = (portfolio.fund.totalValueCLP / usdClpRate).toFixed(2);
+    } else {
+      input.value = portfolio.fund.totalValueCLP;
+    }
+    input.focus();
+    input.select();
+  });
   document.getElementById('total-edit-cancel')?.addEventListener('click', () => {
     document.getElementById('total-edit-inline').style.display = 'none';
   });
   document.getElementById('total-edit-save')?.addEventListener('click', () => {
+    const curr = document.getElementById('total-edit-currency').value;
     const raw = document.getElementById('total-edit-input').value.replace(/\./g, '').replace(',', '.');
     const val = parseFloat(raw);
     if (isNaN(val) || val <= 0) { showToast('❌ Valor inválido', 'error'); return; }
-    portfolio.fund.totalValueCLP = Math.round(val);
+    // Convert to CLP if entered in USD
+    const clpVal = curr === 'USD' ? Math.round(val * usdClpRate) : Math.round(val);
+    portfolio.fund.totalValueCLP = clpVal;
     savePortfolio(portfolio);
     document.getElementById('total-edit-inline').style.display = 'none';
     Cache.clearAll();
     loadData();
-    showToast(`✅ Valor base actualizado a ${formatCLP(val)}`, 'success');
+    showToast(`✅ Valor base actualizado a ${formatCLP(clpVal)}`, 'success');
   });
   document.getElementById('total-edit-input')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') document.getElementById('total-edit-save').click();
@@ -1527,14 +2126,24 @@ function initModals() {
     const name = document.getElementById('add-name').value.trim();
     const shortName = document.getElementById('add-short-name').value.trim() || ticker;
     const type = document.getElementById('add-type').value || 'Stock';
-    const allocation = parseFloat(document.getElementById('add-allocation').value);
+    const rawValue = parseFloat(document.getElementById('add-allocation').value);
+    const inputMode = document.getElementById('add-input-mode').value;
     const sector = document.getElementById('add-sector').value;
     const notes = document.getElementById('add-notes').value.trim();
 
-    if (!ticker || !name || isNaN(allocation)) {
-      showToast('❌ Selecciona un activo y completa el %', 'error');
+    if (!ticker || !name || isNaN(rawValue) || rawValue <= 0) {
+      showToast('❌ Selecciona un activo y completa la asignación', 'error');
       return;
     }
+
+    const totalCLP = portfolio.fund.totalValueCLP || 1;
+    const allocation = parseFloat(convertToPercent(inputMode, rawValue, totalCLP, usdClpRate).toFixed(1));
+
+    if (allocation <= 0 || allocation > 100) {
+      showToast('❌ La asignación debe estar entre 0% y 100%', 'error');
+      return;
+    }
+
     if (portfolio.holdings.some(h => h.ticker === ticker)) {
       showToast('❌ Este ticker ya existe', 'error');
       return;
@@ -1544,7 +2153,7 @@ function initModals() {
     closeAdd();
     Cache.clearAll();
     loadData();
-    showToast(`✅ ${ticker} agregado`, 'success');
+    showToast(`✅ ${ticker} agregado (${allocation.toFixed(1)}%)`, 'success');
     // Reset search UI
     const searchEl = document.getElementById('add-symbol-search');
     if (searchEl) searchEl.value = '';
@@ -1556,7 +2165,22 @@ function initModals() {
     document.getElementById('add-type').value = 'Stock';
     document.getElementById('add-allocation').value = '';
     document.getElementById('add-notes').value = '';
+    const previewEl = document.getElementById('add-allocation-preview');
+    if (previewEl) previewEl.textContent = '';
   });
+
+  // Live preview for allocation input in add modal
+  const addAllocInput = document.getElementById('add-allocation');
+  const addAllocMode = document.getElementById('add-input-mode');
+  const addAllocPreview = document.getElementById('add-allocation-preview');
+  function updateAddAllocPreview() {
+    const val = parseFloat(addAllocInput.value);
+    const mode = addAllocMode.value;
+    const totalCLP = portfolio.fund.totalValueCLP || 1;
+    addAllocPreview.textContent = getAllocationPreview(mode, val, totalCLP, usdClpRate);
+  }
+  addAllocInput?.addEventListener('input', updateAddAllocPreview);
+  addAllocMode?.addEventListener('change', updateAddAllocPreview);
 }
 
 // ============================================

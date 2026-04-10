@@ -84,7 +84,18 @@
                   <option value="Technology">Technology</option><option value="Financials">Financials</option><option value="Healthcare">Healthcare</option><option value="Consumer Discretionary">Consumer Discretionary</option><option value="Multi-Factor">Multi-Factor</option><option value="Emerging Markets">Emerging Markets</option><option value="Aerospace & Defense">Aerospace &amp; Defense</option><option value="Energy">Energy</option><option value="Materials">Materials</option><option value="Telecom">Telecom</option><option value="Other">Otro...</option>
                 </select>
               </div>
-              <div class="form-group"><label class="form-label">Peso (%)</label><input type="number" id="setup-holding-allocation" class="form-input" placeholder="Ej: 15.5" step="0.1" min="0" max="100"></div>
+              <div class="form-group">
+                <label class="form-label">Asignación</label>
+                <div style="display:flex; gap:4px;">
+                  <select id="setup-holding-input-mode" class="form-input" style="width:80px;flex-shrink:0;font-size:var(--text-xs);padding:4px;">
+                    <option value="percent">%</option>
+                    <option value="USD">USD</option>
+                    <option value="CLP">CLP</option>
+                  </select>
+                  <input type="number" id="setup-holding-allocation" class="form-input" placeholder="Ej: 15.5" step="0.1" min="0">
+                </div>
+                <div id="setup-holding-allocation-preview" class="text-tertiary" style="font-size:var(--text-xs);margin-top:2px;"></div>
+              </div>
             </div>
             <button id="setup-add-holding-btn" class="btn btn-primary btn-sm" style="width:100%;">+ Agregar Holding</button>
           </div>
@@ -171,13 +182,22 @@
             <div class="summary-card-icon blue">💰</div>
             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: var(--space-xs);">
               <div class="summary-card-label">Valor Total</div>
-              <button class="btn btn-ghost btn-icon" id="btn-edit-total" title="Editar valor base" style="width:22px;height:22px;font-size:0.7rem;border-radius:var(--radius-sm);">✏️</button>
+              <div style="display:flex;gap:2px;align-items:center;">
+                <button class="btn btn-ghost btn-icon" id="btn-toggle-currency" title="Cambiar moneda" style="width:22px;height:22px;font-size:0.6rem;border-radius:var(--radius-sm);padding:0;">💱</button>
+                <button class="btn btn-ghost btn-icon" id="btn-edit-total" title="Editar valor base" style="width:22px;height:22px;font-size:0.7rem;border-radius:var(--radius-sm);">✏️</button>
+              </div>
             </div>
-            <div class="summary-card-value" id="total-value-clp">—</div>
-            <div class="summary-card-sub" id="total-value-usd">—</div>
+            <div class="summary-card-value" id="total-value-primary">—</div>
+            <div class="summary-card-sub" id="total-value-secondary">—</div>
             <div class="summary-card-sub" id="total-value-base" style="color:var(--text-muted);display:none;"></div>
             <div id="total-edit-inline" class="total-edit-inline" style="display:none;">
-              <input type="text" id="total-edit-input" placeholder="Valor en CLP" />
+              <div style="display:flex;gap:4px;align-items:center;">
+                <select id="total-edit-currency" style="width:70px;padding:4px;background:var(--bg-surface);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);font-size:var(--text-xs);">
+                  <option value="CLP">CLP</option>
+                  <option value="USD">USD</option>
+                </select>
+                <input type="text" id="total-edit-input" placeholder="Valor" />
+              </div>
               <button class="btn btn-primary btn-sm" id="total-edit-save" style="white-space:nowrap;">✓</button>
               <button class="btn btn-ghost btn-sm" id="total-edit-cancel">✕</button>
             </div>
@@ -186,7 +206,7 @@
             <div class="summary-card-icon green">📈</div>
             <div class="summary-card-label">Cambio Diario</div>
             <div class="summary-card-value" id="daily-change">—</div>
-            <div class="summary-card-sub" id="daily-change-clp">—</div>
+            <div class="summary-card-sub" id="daily-change-amount">—</div>
           </div>
           <div class="summary-card animate-fade-in-up stagger-3">
             <div class="summary-card-icon purple">📦</div>
@@ -438,6 +458,18 @@
           </div>
         </div>
 
+        <!-- All Holdings Performance Lines -->
+        <div class="card" style="margin-bottom: var(--space-lg);">
+          <div class="card-header">
+            <h2 class="card-title">📈 Rendimiento de Todos los Holdings</h2>
+            <div class="text-tertiary" style="font-size:var(--text-xs);">Cada holding aparece desde su fecha de ingreso al fondo (rendimiento % normalizado)</div>
+          </div>
+          <div class="card-body">
+            <div id="all-holdings-perf-legend" style="display:flex; flex-wrap:wrap; gap:var(--space-sm); margin-bottom:var(--space-md);"></div>
+            <div class="performance-chart-wrapper" id="all-holdings-perf-container"></div>
+          </div>
+        </div>
+
         <!-- Contribution Chart -->
         <div class="card" style="margin-bottom: var(--space-lg);">
           <div class="card-header">
@@ -452,7 +484,7 @@
         <!-- Individual Holding Performance -->
         <div class="card" style="margin-bottom: var(--space-lg);">
           <div class="card-header">
-            <h2 class="card-title">📈 Rendimiento por Holding</h2>
+            <h2 class="card-title">🔎 Rendimiento Individual por Holding</h2>
             <div class="text-tertiary" style="font-size:var(--text-xs);">Precio histórico de cada activo • Línea vertical = fecha de ingreso al fondo</div>
           </div>
           <div class="card-body">
@@ -558,8 +590,16 @@
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-md);">
           <div class="form-group">
-            <label class="form-label">Asignación (%) *</label>
-            <input type="number" class="form-input" id="add-allocation" step="0.1" min="0" max="100" placeholder="Ej: 5.0" />
+            <label class="form-label">Asignación *</label>
+            <div style="display:flex; gap:4px;">
+              <select id="add-input-mode" class="form-select" style="width:80px;flex-shrink:0;font-size:var(--text-xs);padding:4px 6px;">
+                <option value="percent">%</option>
+                <option value="USD">USD</option>
+                <option value="CLP">CLP</option>
+              </select>
+              <input type="number" class="form-input" id="add-allocation" step="0.1" min="0" placeholder="Ej: 5.0" />
+            </div>
+            <div id="add-allocation-preview" class="text-tertiary" style="font-size:var(--text-xs);margin-top:2px;"></div>
           </div>
           <div class="form-group">
             <label class="form-label">Sector</label>
