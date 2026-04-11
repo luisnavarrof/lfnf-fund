@@ -1,15 +1,8 @@
 /**
- * Generate fund-management.xlsx — Standalone Portfolio Management Workbook
- * Run: node scripts/generate-excel.js
- *
- * Creates a rich Excel file with:
- *   1. Dashboard  — Key metrics, sector breakdown, formulas
- *   2. Holdings   — Full holdings list with allocation, sector, notes
- *   3. ETF_Holdings — Underlying ETF composition for transparency
- *   4. Análisis   — Sector aggregation, type breakdown, concentration metrics
- *   5. Changelog  — Manual change log
+ * LFNF Fund — Premium Excel Generator
+ * Generates a highly stylized, professional, standalone Excel file.
  */
-import XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -20,294 +13,274 @@ const dataDir = join(__dirname, '..', 'data');
 const portfolio = JSON.parse(readFileSync(join(dataDir, 'portfolio.json'), 'utf8'));
 const etfHoldings = JSON.parse(readFileSync(join(dataDir, 'etf-holdings.json'), 'utf8'));
 
-const wb = XLSX.utils.book_new();
+// Modern Professional Design Palette
+const PALETTE = {
+  headerBg: 'FF0F172A',     // Slate 900
+  headerBgAccent: 'FF3B82F6', // Blue 500
+  headerText: 'FFFFFFFF',   // White
+  rowAltBg: 'FFF8FAFC',     // Slate 50
+  borderLight: 'FFE2E8F0',  // Slate 200
+  positive: 'FF10B981',     // Emerald 500
+  negative: 'FFEF4444',     // Red 500
+};
 
-// ═══════════════════════════════════════════
-// SHEET 1: Dashboard
-// ═══════════════════════════════════════════
-const fund = portfolio.fund;
-const holdings = portfolio.holdings;
-const totalAlloc = holdings.reduce((s, h) => s + h.allocation, 0);
-const etfCount = holdings.filter(h => h.type === 'ETF').length;
-const stockCount = holdings.filter(h => h.type === 'Stock').length;
+const BORDER_STYLE = {
+  top: { style: 'thin', color: { argb: PALETTE.borderLight } },
+  left: { style: 'thin', color: { argb: PALETTE.borderLight } },
+  bottom: { style: 'thin', color: { argb: PALETTE.borderLight } },
+  right: { style: 'thin', color: { argb: PALETTE.borderLight } }
+};
 
-// Sector aggregation
-const sectors = {};
-holdings.forEach(h => {
-  if (!sectors[h.sector]) sectors[h.sector] = { count: 0, allocation: 0, tickers: [] };
-  sectors[h.sector].count++;
-  sectors[h.sector].allocation += h.allocation;
-  sectors[h.sector].tickers.push(h.ticker);
-});
-const sectorEntries = Object.entries(sectors).sort((a, b) => b[1].allocation - a[1].allocation);
+const STYLE = {
+  header: {
+    font: { name: 'Calibri', size: 11, bold: true, color: { argb: PALETTE.headerText } },
+    fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.headerBg } },
+    alignment: { vertical: 'middle', horizontal: 'center' },
+    border: BORDER_STYLE
+  },
+  title: {
+    font: { name: 'Calibri', size: 16, bold: true, color: { argb: PALETTE.headerText } },
+    fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.headerBgAccent } },
+    alignment: { vertical: 'middle', horizontal: 'left' }
+  },
+  cellNormal: {
+    font: { name: 'Calibri', size: 11, color: { argb: 'FF334155' } }, // Slate 700
+    alignment: { vertical: 'middle' },
+    border: BORDER_STYLE
+  },
+  cellAlt: {
+    font: { name: 'Calibri', size: 11, color: { argb: 'FF334155' } },
+    fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.rowAltBg } },
+    alignment: { vertical: 'middle' },
+    border: BORDER_STYLE
+  },
+  cellBold: {
+    font: { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF0F172A' } },
+    alignment: { vertical: 'middle' },
+    border: BORDER_STYLE
+  }
+};
 
-// Top 5 holdings
-const topHoldings = [...holdings].sort((a, b) => b.allocation - a.allocation).slice(0, 5);
+async function generateExcel() {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'LFNF Fund Manager';
+  wb.created = new Date();
 
-// HHI (Herfindahl–Hirschman Index) — concentration metric
-const hhi = holdings.reduce((sum, h) => sum + Math.pow(h.allocation, 2), 0);
-const effectiveN = 10000 / hhi; // Effective number of holdings
+  // ═══════════════════════════════════════════
+  // DATA PREP
+  // ═══════════════════════════════════════════
+  const fund = portfolio.fund;
+  const holdings = portfolio.holdings;
+  
+  // Consolidate ETFs and Stocks
+  let maxAllocationObj = { ticker: '-', allocation: 0, name: '-' };
+  let etfCount = 0;
+  let stockCount = 0;
+  const sectors = {};
+  
+  holdings.forEach(h => {
+    if (h.type === 'ETF') etfCount++;
+    if (h.type === 'Stock') stockCount++;
+    if (!sectors[h.sector]) sectors[h.sector] = { count: 0, allocation: 0 };
+    sectors[h.sector].count++;
+    sectors[h.sector].allocation += h.allocation;
+    if (h.allocation > maxAllocationObj.allocation) {
+      maxAllocationObj = h;
+    }
+  });
+  
+  const sectorEntries = Object.entries(sectors).sort((a, b) => b[1].allocation - a[1].allocation);
 
-const dashboardData = [
+  // ═══════════════════════════════════════════
+  // SHEET 1: DASHBOARD
+  // ═══════════════════════════════════════════
+  const wsDash = wb.addWorksheet('📊 Dashboard', { views: [{ showGridLines: false }] });
+  
+  wsDash.columns = [
+    { width: 4 },   // A - Spacer
+    { width: 28 },  // B - Metric Label
+    { width: 28 },  // C - Metric Value
+    { width: 4 },   // D - Spacer
+    { width: 33 },  // E - Analytics Label
+    { width: 14 }   // F - Analytics Value
+  ];
+
   // Header
-  ['', '', '', '', ''],
-  ['  LFNF FUND — PORTFOLIO DASHBOARD', '', '', '', ''],
-  ['', '', '', '', ''],
-  // Fund Info
-  ['  INFORMACIÓN DEL FONDO', '', '', '  MÉTRICAS CLAVE', ''],
-  ['  Nombre', fund.name, '', '  Total Holdings', holdings.length],
-  ['  Propietario', fund.fullName, '', '  ETFs', etfCount],
-  ['  Moneda', fund.currency, '', '  Acciones', stockCount],
-  ['  Valor Total (CLP)', fund.totalValueCLP, '', '  Asignación Total', `${totalAlloc.toFixed(1)}%`],
-  ['  Broker', fund.broker, '', '  Concentración (HHI)', Math.round(hhi)],
-  ['  Fecha Inicio', fund.inceptionDate, '', '  Nro. Efectivo Holdings', effectiveN.toFixed(1)],
-  ['  Benchmark', fund.benchmark, '', '', ''],
-  ['', '', '', '', ''],
-  // Top 5
-  ['  TOP 5 HOLDINGS', '', 'Asignación', '', ''],
-  ...topHoldings.map((h, i) => [`  ${i + 1}. ${h.ticker}`, h.name, `${h.allocation}%`, '', '']),
-  ['', '', '', '', ''],
-  // Sector Breakdown
-  ['  DISTRIBUCIÓN SECTORIAL', '', '', '', ''],
-  ['  Sector', '# Holdings', 'Asignación', 'Tickers', ''],
-  ...sectorEntries.map(([name, data]) => [
-    `  ${name}`, data.count, `${data.allocation.toFixed(1)}%`, data.tickers.join(', '), ''
-  ]),
-  ['', '', '', '', ''],
-  // Type Breakdown
-  ['  DISTRIBUCIÓN POR TIPO', '', '', '', ''],
-  ['  Tipo', '# Holdings', 'Asignación', '', ''],
-  ['  ETF', etfCount, `${holdings.filter(h => h.type === 'ETF').reduce((s, h) => s + h.allocation, 0).toFixed(1)}%`, '', ''],
-  ['  Stock', stockCount, `${holdings.filter(h => h.type === 'Stock').reduce((s, h) => s + h.allocation, 0).toFixed(1)}%`, '', ''],
-  ['', '', '', '', ''],
-  ['  Última actualización:', new Date().toISOString().split('T')[0], '', '', ''],
-];
+  wsDash.mergeCells('B2:F3');
+  const titleCell = wsDash.getCell('B2');
+  titleCell.value = ' LFNF FUND — PORTAFOLIO DASHBOARD';
+  titleCell.style = STYLE.title;
 
-const wsDashboard = XLSX.utils.aoa_to_sheet(dashboardData);
-wsDashboard['!cols'] = [{ wch: 28 }, { wch: 45 }, { wch: 16 }, { wch: 25 }, { wch: 20 }];
+  // Fund Info Block
+  const createSubheader = (cellRef, text) => {
+    const c = wsDash.getCell(cellRef);
+    c.value = text;
+    c.font = { name: 'Calibri', size: 12, bold: true, color: { argb: 'FF0F172A' } };
+    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } };
+    c.alignment = { vertical: 'middle', horizontal: 'center' };
+  };
 
-// Merge header cell
-wsDashboard['!merges'] = [
-  { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } }, // Title
-];
-XLSX.utils.book_append_sheet(wb, wsDashboard, 'Dashboard');
+  wsDash.mergeCells('B5:C5'); createSubheader('B5', 'INFORMACIÓN DEL FONDO');
+  wsDash.mergeCells('E5:F5'); createSubheader('E5', 'MÉTRICAS CLAVE');
 
-// ═══════════════════════════════════════════
-// SHEET 2: Holdings
-// ═══════════════════════════════════════════
-const holdingsHeader = [
-  'Ticker', 'Nombre', 'Nombre Corto', 'Tipo', 'Asignación (%)',
-  'Sector', 'Fecha Agregado', 'URL Oficial', 'Notas'
-];
-const holdingsRows = holdings.map(h => [
-  h.ticker,
-  h.name,
-  h.shortName || h.ticker,
-  h.type,
-  h.allocation,
-  h.sector,
-  h.addedDate || '',
-  h.officialUrl || '',
-  h.notes || '',
-]);
+  const addDashRow = (rowNum, label1, val1, format1, label2, val2, format2) => {
+    const r = wsDash.getRow(rowNum);
+    // Left Metric
+    r.getCell('B').value = `  ${label1}`;
+    r.getCell('B').style = STYLE.cellBold;
+    r.getCell('C').value = val1;
+    r.getCell('C').style = STYLE.cellNormal;
+    if (format1) r.getCell('C').numFmt = format1;
+    
+    // Right Metric
+    r.getCell('E').value = `  ${label2}`;
+    r.getCell('E').style = STYLE.cellBold;
+    r.getCell('F').value = val2;
+    r.getCell('F').style = STYLE.cellNormal;
+    r.getCell('F').alignment = { horizontal: 'center' };
+    if (format2) r.getCell('F').numFmt = format2;
+    r.height = 20;
+  };
 
-// Add summary row at the bottom
-const summaryRow = [
-  'TOTAL', `${holdings.length} holdings`, '', '', totalAlloc,
-  `${Object.keys(sectors).length} sectores`, '', '', ''
-];
-
-const wsHoldings = XLSX.utils.aoa_to_sheet([holdingsHeader, ...holdingsRows, [], summaryRow]);
-wsHoldings['!cols'] = [
-  { wch: 8 },  // Ticker
-  { wch: 45 }, // Nombre
-  { wch: 14 }, // Nombre Corto
-  { wch: 7 },  // Tipo
-  { wch: 14 }, // Asignación
-  { wch: 24 }, // Sector
-  { wch: 14 }, // Fecha
-  { wch: 60 }, // URL
-  { wch: 45 }, // Notas
-];
-
-// Autofilter on holdings
-wsHoldings['!autofilter'] = { ref: `A1:I${holdingsRows.length + 1}` };
-XLSX.utils.book_append_sheet(wb, wsHoldings, 'Holdings');
-
-// ═══════════════════════════════════════════
-// SHEET 3: ETF_Holdings
-// ═══════════════════════════════════════════
-const etfHeader = [
-  'ETF Ticker', 'ETF Nombre', 'Stock Ticker', 'Stock Nombre',
-  'Peso en ETF (%)', 'Sector', 'Peso Real en Portfolio (%)'
-];
-const etfRows = [];
-
-// Calculate ETF allocation map
-const etfAllocMap = {};
-holdings.filter(h => h.type === 'ETF').forEach(h => { etfAllocMap[h.ticker] = h.allocation; });
-
-for (const [etfTicker, etfData] of Object.entries(etfHoldings)) {
-  if (etfTicker === '_meta') continue;
-  const etfAlloc = etfAllocMap[etfTicker] || 0;
-  for (const sub of etfData.holdings) {
-    const realWeight = (sub.weight / 100) * etfAlloc;
-    etfRows.push([
-      etfTicker,
-      etfData.name,
-      sub.ticker,
-      sub.name,
-      sub.weight,
-      sub.sector,
-      parseFloat(realWeight.toFixed(3)),
-    ]);
+  addDashRow(6, 'Nombre', fund.name, null, 'Total Holdings', holdings.length, null);
+  addDashRow(7, 'Propietario', fund.fullName, null, 'Total ETFs', etfCount, null);
+  addDashRow(8, 'Moneda', fund.currency, null, 'Total Acciones', stockCount, null);
+  addDashRow(9, 'Valor Total (Estimado)', fund.totalValueCLP, '"$"#,##0', 'Asignación Total', holdings.reduce((s, h) => s + h.allocation, 0) / 100, '0.0%');
+  addDashRow(10, 'Broker', fund.broker, null, 'Top Holding', maxAllocationObj.ticker, null);
+  addDashRow(11, 'Benchmark', fund.benchmark, null, 'Mayor Sector', sectorEntries.length > 0 ? sectorEntries[0][0] : '-', null);
+  
+  // Sectors Breakdown
+  wsDash.mergeCells('B14:C14'); createSubheader('B14', 'DISTRIBUCIÓN SECTORIAL');
+  wsDash.getRow(15).values = ['', 'Sector', 'Asignación'];
+  wsDash.getCell('B15').style = STYLE.header; wsDash.getCell('C15').style = STYLE.header;
+  
+  let rowIdx = 16;
+  for (const [sector, d] of sectorEntries) {
+    wsDash.getRow(rowIdx).values = ['', sector, d.allocation / 100];
+    wsDash.getCell(`B${rowIdx}`).style = (rowIdx%2===0)? STYLE.cellAlt:STYLE.cellNormal;
+    wsDash.getCell(`C${rowIdx}`).style = (rowIdx%2===0)? STYLE.cellAlt:STYLE.cellNormal;
+    wsDash.getCell(`C${rowIdx}`).numFmt = '0.00%';
+    rowIdx++;
   }
-}
 
-// Sort by real portfolio weight descending
-etfRows.sort((a, b) => b[6] - a[6]);
+  // ═══════════════════════════════════════════
+  // SHEET 2: HOLDINGS
+  // ═══════════════════════════════════════════
+  const wsHold = wb.addWorksheet('💼 Holdings');
+  
+  wsHold.columns = [
+    { header: 'Ticker', key: 'ticker', width: 10 },
+    { header: 'Nombre / Empresa', key: 'name', width: 35 },
+    { header: 'Tipo', key: 'type', width: 10 },
+    { header: 'Sector', key: 'sector', width: 25 },
+    { header: 'Asignación (%)', key: 'alloc', width: 15 },
+    { header: 'Valor Est. (CLP)', key: 'val', width: 18 },
+    { header: 'Notas', key: 'notes', width: 40 },
+  ];
 
-const wsEtf = XLSX.utils.aoa_to_sheet([etfHeader, ...etfRows]);
-wsEtf['!cols'] = [
-  { wch: 10 }, { wch: 45 }, { wch: 12 }, { wch: 35 },
-  { wch: 16 }, { wch: 24 }, { wch: 22 },
-];
-wsEtf['!autofilter'] = { ref: `A1:G${etfRows.length + 1}` };
-XLSX.utils.book_append_sheet(wb, wsEtf, 'ETF_Holdings');
+  // Apply Header Style
+  wsHold.getRow(1).eachCell(cell => { cell.style = STYLE.header; });
+  wsHold.getRow(1).height = 25;
 
-// ═══════════════════════════════════════════
-// SHEET 4: Análisis — Decomposed real exposure
-// ═══════════════════════════════════════════
-// Consolidate all holdings (direct + via ETF) into real stocks
-const consolidated = new Map();
+  let hRow = 2;
+  const totalValueRef = fund.totalValueCLP;
+  
+  holdings.forEach(h => {
+    const row = wsHold.addRow({
+      ticker: h.ticker,
+      name: h.name,
+      type: h.type,
+      sector: h.sector,
+      alloc: h.allocation / 100, // Excel % format needs decimal
+      notes: h.notes || ''
+    });
+    
+    // Formula for Estimated Value based on %
+    row.getCell('val').value = { formula: `E${hRow}*${totalValueRef}` };
+    
+    // Styling
+    const styleToUse = (hRow % 2 === 0) ? STYLE.cellAlt : STYLE.cellNormal;
+    row.eachCell(cell => { cell.style = Object.assign({}, styleToUse); });
+    
+    // Formatting
+    row.getCell('alloc').numFmt = '0.00%';
+    row.getCell('val').numFmt = '"$"#,##0';
+    
+    hRow++;
+  });
 
-for (const h of holdings) {
-  if (h.type === 'Stock') {
-    const key = h.ticker;
-    if (consolidated.has(key)) {
-      consolidated.get(key).directAlloc += h.allocation;
-    } else {
-      consolidated.set(key, {
-        ticker: h.ticker,
-        name: h.name,
-        sector: h.sector,
-        directAlloc: h.allocation,
-        viaEtfAlloc: 0,
-        etfSources: [],
-      });
-    }
-  }
-}
+  wsHold.autoFilter = `A1:G${hRow - 1}`;
 
-for (const [etfTicker, etfData] of Object.entries(etfHoldings)) {
-  if (etfTicker === '_meta') continue;
-  const etfAlloc = etfAllocMap[etfTicker] || 0;
-  if (etfAlloc === 0) continue;
+  // ═══════════════════════════════════════════
+  // SHEET 3: ETF TRANSPARENCIA
+  // ═══════════════════════════════════════════
+  const wsEtf = wb.addWorksheet('🔍 ETF_Holdings');
+  
+  wsEtf.columns = [
+    { header: 'ETF Padre', key: 'etf', width: 12 },
+    { header: 'Nombre del Fondo', key: 'etfName', width: 35 },
+    { header: 'Ticker Real', key: 'stock', width: 12 },
+    { header: 'Nombre Empresa', key: 'stockName', width: 35 },
+    { header: 'Sector', key: 'sector', width: 25 },
+    { header: 'Peso en ETF', key: 'weight', width: 15 },
+    { header: 'Exposición Total (% en Portafolio)', key: 'realWeight', width: 28 },
+  ];
 
-  for (const sub of etfData.holdings) {
-    const effectiveWeight = (sub.weight / 100) * etfAlloc;
-    const key = sub.ticker === 'GOOG' ? 'GOOGL' : sub.ticker.split('.')[0];
+  wsEtf.getRow(1).eachCell(cell => { cell.style = STYLE.header; });
+  wsEtf.getRow(1).height = 25;
 
-    if (consolidated.has(key)) {
-      consolidated.get(key).viaEtfAlloc += effectiveWeight;
-      consolidated.get(key).etfSources.push(etfTicker);
-    } else {
-      consolidated.set(key, {
-        ticker: sub.ticker,
-        name: sub.name,
+  let eRow = 2;
+  const etfAllocMap = {};
+  holdings.filter(h => h.type === 'ETF').forEach(h => { etfAllocMap[h.ticker] = h.allocation; });
+
+  const customEtfRows = [];
+  for (const [etfTicker, etfData] of Object.entries(etfHoldings)) {
+    if (etfTicker === '_meta') continue;
+    const etfAlloc = etfAllocMap[etfTicker] || 0;
+    
+    for (const sub of etfData.holdings) {
+      const realWeight = (sub.weight / 100) * etfAlloc;
+      customEtfRows.push({
+        etf: etfTicker,
+        etfName: etfData.name,
+        stock: sub.ticker,
+        stockName: sub.name,
         sector: sub.sector,
-        directAlloc: 0,
-        viaEtfAlloc: effectiveWeight,
-        etfSources: [etfTicker],
+        weight: sub.weight / 100,
+        realWeight: realWeight / 100
       });
     }
   }
+
+  // Sort by real portfolio weight descending
+  customEtfRows.sort((a, b) => b.realWeight - a.realWeight);
+
+  customEtfRows.forEach(data => {
+    const row = wsEtf.addRow(data);
+    const styleToUse = (eRow % 2 === 0) ? STYLE.cellAlt : STYLE.cellNormal;
+    row.eachCell(cell => { cell.style = Object.assign({}, styleToUse); });
+    
+    row.getCell('weight').numFmt = '0.00%';
+    row.getCell('realWeight').numFmt = '0.00%';
+    
+    if (data.realWeight >= 0.01) {
+      row.getCell('realWeight').font = { ...styleToUse.font, bold: true, color: { argb: PALETTE.headerBgAccent } };
+    }
+    
+    eRow++;
+  });
+  
+  wsEtf.autoFilter = `A1:G${eRow - 1}`;
+
+  // ═══════════════════════════════════════════
+  // WRITE FILE
+  // ═══════════════════════════════════════════
+  const outputPath = join(__dirname, '..', 'fund-management.xlsx');
+  await wb.xlsx.writeFile(outputPath);
+  
+  console.log(`✅ Excel PREMIUM generado exitosamente en: ${outputPath}`);
 }
 
-const analysisHeader = [
-  'Ticker', 'Nombre', 'Sector', 'Exposición Directa (%)',
-  'Exposición vía ETF (%)', 'Exposición Total (%)', 'Fuente(s)',
-  'Tipo Exposición'
-];
-
-const analysisRows = Array.from(consolidated.values())
-  .map(h => {
-    const total = h.directAlloc + h.viaEtfAlloc;
-    const type = h.directAlloc > 0 && h.viaEtfAlloc > 0 ? 'Ambas'
-               : h.directAlloc > 0 ? 'Directa'
-               : 'Vía ETF';
-    const sources = h.directAlloc > 0 ? ['Directa', ...new Set(h.etfSources)].join(', ')
-                  : [...new Set(h.etfSources)].join(', ');
-    return [
-      h.ticker, h.name, h.sector,
-      parseFloat(h.directAlloc.toFixed(2)),
-      parseFloat(h.viaEtfAlloc.toFixed(3)),
-      parseFloat(total.toFixed(3)),
-      sources,
-      type,
-    ];
-  })
-  .sort((a, b) => b[5] - a[5]);
-
-// Sector summary for analysis
-const realSectors = {};
-for (const row of analysisRows) {
-  const sector = row[2];
-  if (!realSectors[sector]) realSectors[sector] = { count: 0, allocation: 0 };
-  realSectors[sector].count++;
-  realSectors[sector].allocation += row[5];
-}
-const realSectorEntries = Object.entries(realSectors).sort((a, b) => b[1].allocation - a[1].allocation);
-
-const analysisSummary = [
-  [],
-  ['RESUMEN SECTORIAL REAL (ETFs descompuestos)', '', '', '', '', '', '', ''],
-  ['Sector', '# Acciones', 'Exposición Total (%)', '', '', '', '', ''],
-  ...realSectorEntries.map(([name, data]) => [
-    name, data.count, parseFloat(data.allocation.toFixed(2)), '', '', '', '', ''
-  ]),
-  [],
-  ['ESTADÍSTICAS', '', '', '', '', '', '', ''],
-  ['Total acciones reales (únicas)', analysisRows.length, '', '', '', '', '', ''],
-  ['Acciones con exposición directa', analysisRows.filter(r => r[3] > 0).length, '', '', '', '', '', ''],
-  ['Acciones sólo vía ETF', analysisRows.filter(r => r[7] === 'Vía ETF').length, '', '', '', '', '', ''],
-  ['Acciones en ambas', analysisRows.filter(r => r[7] === 'Ambas').length, '', '', '', '', '', ''],
-];
-
-const wsAnalysis = XLSX.utils.aoa_to_sheet([analysisHeader, ...analysisRows, ...analysisSummary]);
-wsAnalysis['!cols'] = [
-  { wch: 10 }, { wch: 35 }, { wch: 24 }, { wch: 20 },
-  { wch: 20 }, { wch: 20 }, { wch: 30 }, { wch: 14 },
-];
-wsAnalysis['!autofilter'] = { ref: `A1:H${analysisRows.length + 1}` };
-XLSX.utils.book_append_sheet(wb, wsAnalysis, 'Análisis');
-
-// ═══════════════════════════════════════════
-// SHEET 5: Changelog
-// ═══════════════════════════════════════════
-const changelogHeader = ['Fecha', 'Acción', 'Ticker', 'Detalle'];
-const changelogRows = [
-  [new Date().toISOString().split('T')[0], 'INIT', 'ALL', 'Portafolio inicial generado automáticamente'],
-  ['', '', '', ''],
-  ['', '', '', ''],
-  ['', '', '', ''],
-  ['', '', '', ''],
-  // Leave empty rows for the user to fill
-];
-
-const wsChangelog = XLSX.utils.aoa_to_sheet([changelogHeader, ...changelogRows]);
-wsChangelog['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 10 }, { wch: 60 }];
-XLSX.utils.book_append_sheet(wb, wsChangelog, 'Changelog');
-
-// ═══════════════════════════════════════════
-// Write file
-// ═══════════════════════════════════════════
-const outputPath = join(__dirname, '..', 'fund-management.xlsx');
-XLSX.writeFile(wb, outputPath);
-
-console.log(`✅ Excel generado: ${outputPath}`);
-console.log(`   📊 Dashboard: métricas clave, top 5, sectores, tipo`);
-console.log(`   💼 Holdings: ${holdingsRows.length} activos (con autofiltro)`);
-console.log(`   📦 ETF_Holdings: ${etfRows.length} posiciones subyacentes (con peso real en portfolio)`);
-console.log(`   🔍 Análisis: ${analysisRows.length} acciones reales únicas, ${realSectorEntries.length} sectores`);
-console.log(`   📝 Changelog: listo para registrar cambios`);
+generateExcel().catch(err => {
+    console.error('Error generating Premium Excel:', err);
+});
