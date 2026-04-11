@@ -98,10 +98,12 @@
             </div>
           </div>
 
-          <div style="display:flex; gap: var(--space-md); margin-top: var(--space-lg);">
+          <div style="display:flex; gap: var(--space-sm); margin-top: var(--space-lg); flex-wrap: wrap;">
             <button id="setup-use-default-btn" class="btn btn-ghost" style="flex:1;">Cargar Demo</button>
-            <button id="setup-finish-btn" class="btn btn-primary" style="flex:2;">Finalizar Configuración</button>
+            <button id="setup-import-excel-btn" class="btn btn-ghost" style="flex:1; border: 1px dashed var(--color-accent, #3b82f6);">📊 Importar Excel</button>
+            <button id="setup-finish-btn" class="btn btn-primary" style="flex-basis: 100%;">Finalizar Configuración</button>
           </div>
+          <input type="file" id="setup-excel-file" accept=".xlsx,.xls" style="display:none;" />
         </div>
 
         <!-- Step Dots -->
@@ -486,9 +488,12 @@
         <hr style="border-color: var(--border-subtle); margin: var(--space-md) 0;" />
         <div style="display:flex; gap:var(--space-sm); flex-wrap:wrap;">
           <button class="btn btn-sm" id="btn-clear-cache" style="font-size: var(--text-xs);">🗑 Limpiar caché</button>
-          <button class="btn btn-sm" id="btn-export" style="font-size: var(--text-xs);">📤 Exportar Portfolio</button>
-          <button class="btn btn-sm" id="btn-import" style="font-size: var(--text-xs);">📥 Importar Portfolio</button>
+          <button class="btn btn-sm" id="btn-export" style="font-size: var(--text-xs);">📤 Exportar JSON</button>
+          <button class="btn btn-sm" id="btn-export-excel" style="font-size: var(--text-xs);">📊 Exportar Excel</button>
+          <button class="btn btn-sm" id="btn-import" style="font-size: var(--text-xs);">📥 Importar JSON</button>
+          <button class="btn btn-sm" id="btn-import-excel" style="font-size: var(--text-xs); border: 1px dashed var(--color-accent, #3b82f6);">📊 Importar Excel</button>
           <input type="file" id="import-file" accept=".json" style="display:none;" />
+          <input type="file" id="import-excel-file" accept=".xlsx,.xls" style="display:none;" />
           <button class="btn btn-sm" id="btn-reset" style="font-size: var(--text-xs); color: var(--color-loss);">🔄 Resetear todo</button>
         </div>
       </div>

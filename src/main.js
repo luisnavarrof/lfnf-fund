@@ -29,8 +29,12 @@ import {
   getSectorColor, SECTOR_COLORS, HOLDING_COLORS
 } from './utils/formatters.js';
 import {
-  decomposePortfolio, calculateRealSectors, getCoverage, getSourceBadge
+  decomposePortfolio, calculateRealSectors, getCoverage, getSourceBadge,
+  setEtfHoldingsData, getEtfHoldingsData
 } from './utils/transparency.js';
+import {
+  parseExcelBuffer, generateExcelFromState, validateExcelStructure
+} from './utils/excel-loader.js';
 
 // ============================================
 // STATE
@@ -123,6 +127,15 @@ function hasCompletedSetup() {
 // INITIALIZATION
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
+  // Restore custom ETF holdings from localStorage if previously imported from Excel
+  try {
+    const customEtf = localStorage.getItem('lfnf_etf_holdings_custom');
+    if (customEtf) {
+      const parsed = JSON.parse(customEtf);
+      setEtfHoldingsData(parsed);
+    }
+  } catch { /* use default */ }
+
   initSetup();
   initNavigation();
   initModals();
@@ -224,6 +237,54 @@ function initSetup() {
   document.getElementById('setup-use-default-btn')?.addEventListener('click', () => {
     setupHoldings = defaultPortfolioData.holdings.map(h => ({...h}));
     renderSetupHoldingsList();
+  });
+
+  // Step 3: Import from Excel
+  document.getElementById('setup-import-excel-btn')?.addEventListener('click', () => {
+    document.getElementById('setup-excel-file').click();
+  });
+  document.getElementById('setup-excel-file')?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const buffer = await file.arrayBuffer();
+      const validation = validateExcelStructure(buffer);
+      if (!validation.valid) {
+        showToast('❌ ' + validation.errors.join('. '), 'error');
+        e.target.value = '';
+        return;
+      }
+      if (validation.warnings.length > 0) {
+        showToast('⚠️ ' + validation.warnings.join('. '), 'info');
+      }
+      const parsed = parseExcelBuffer(buffer);
+      if (parsed.portfolio && parsed.portfolio.holdings.length > 0) {
+        setupHoldings = parsed.portfolio.holdings.map(h => ({...h}));
+        renderSetupHoldingsList();
+        // Fill in fund info from Excel if available
+        if (parsed.portfolio.fund.name) {
+          document.getElementById('setup-fund-name').value = parsed.portfolio.fund.name;
+        }
+        if (parsed.portfolio.fund.fullName) {
+          document.getElementById('setup-owner-name').value = parsed.portfolio.fund.fullName;
+        }
+        if (parsed.portfolio.fund.broker) {
+          document.getElementById('setup-broker').value = parsed.portfolio.fund.broker;
+        }
+        // Store ETF holdings data from Excel
+        if (parsed.etfHoldings) {
+          setEtfHoldingsData(parsed.etfHoldings);
+          localStorage.setItem('lfnf_etf_holdings_custom', JSON.stringify(parsed.etfHoldings));
+        }
+        showToast(`✅ Excel importado: ${setupHoldings.length} holdings cargados`, 'success');
+      } else {
+        showToast('❌ No se encontraron holdings en el Excel.', 'error');
+      }
+    } catch (err) {
+      console.error('Excel import error:', err);
+      showToast('❌ Error al leer el archivo Excel: ' + err.message, 'error');
+    }
+    e.target.value = '';
   });
 }
 
@@ -1028,6 +1089,80 @@ function initModals() {
       }
     };
     reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  // Excel Export
+  document.getElementById('btn-export-excel')?.addEventListener('click', () => {
+    try {
+      const etfData = getEtfHoldingsData();
+      const excelBuffer = generateExcelFromState(portfolio, etfData, enrichedHoldings);
+      const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const profile = getFundProfile() || {};
+      const safeName = (profile.fundName || 'portfolio').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+      a.href = url;
+      a.download = `${safeName}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('📊 Excel exportado con éxito', 'success');
+    } catch (err) {
+      console.error('Excel export error:', err);
+      showToast('❌ Error al exportar Excel: ' + err.message, 'error');
+    }
+  });
+
+  // Excel Import
+  document.getElementById('btn-import-excel')?.addEventListener('click', () => {
+    document.getElementById('import-excel-file').click();
+  });
+  document.getElementById('import-excel-file')?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const buffer = await file.arrayBuffer();
+      const validation = validateExcelStructure(buffer);
+      if (!validation.valid) {
+        showToast('❌ ' + validation.errors.join('. '), 'error');
+        e.target.value = '';
+        return;
+      }
+      if (validation.warnings.length > 0) {
+        showToast('⚠️ ' + validation.warnings.join('. '), 'info');
+      }
+      const parsed = parseExcelBuffer(buffer);
+      if (parsed.portfolio) {
+        // Update fund profile
+        if (parsed.portfolio.fund) {
+          const profile = getFundProfile() || {};
+          if (parsed.portfolio.fund.name) profile.fundName = parsed.portfolio.fund.name;
+          if (parsed.portfolio.fund.fullName) profile.ownerName = parsed.portfolio.fund.fullName;
+          if (parsed.portfolio.fund.broker) profile.broker = parsed.portfolio.fund.broker;
+          saveFundProfile(profile);
+          applyFundProfile(profile);
+          // Update portfolio fund data
+          portfolio.fund = { ...portfolio.fund, ...parsed.portfolio.fund };
+        }
+        // Update holdings
+        if (parsed.portfolio.holdings.length > 0) {
+          portfolio.holdings = parsed.portfolio.holdings;
+        }
+        savePortfolio(portfolio);
+      }
+      // Update ETF holdings data
+      if (parsed.etfHoldings) {
+        setEtfHoldingsData(parsed.etfHoldings);
+        localStorage.setItem('lfnf_etf_holdings_custom', JSON.stringify(parsed.etfHoldings));
+      }
+
+      Cache.clearAll();
+      loadData();
+      showToast(`📊 Excel importado: ${portfolio.holdings.length} holdings actualizados`, 'success');
+    } catch (err) {
+      console.error('Excel import error:', err);
+      showToast('❌ Error al importar Excel: ' + err.message, 'error');
+    }
     e.target.value = '';
   });
 

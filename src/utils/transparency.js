@@ -3,7 +3,27 @@
  * Decomposes ETFs into their underlying holdings to show the "raw" portfolio
  */
 
-import etfHoldingsData from '../../data/etf-holdings.json';
+import defaultEtfHoldingsData from '../../data/etf-holdings.json';
+
+// Module-level mutable reference — can be replaced by Excel import
+let etfHoldingsData = defaultEtfHoldingsData;
+
+/**
+ * Replace the ETF holdings data at runtime (e.g., from an Excel import)
+ * @param {Object} newData - New ETF holdings map
+ */
+export function setEtfHoldingsData(newData) {
+  if (newData && typeof newData === 'object' && Object.keys(newData).length > 0) {
+    etfHoldingsData = newData;
+  }
+}
+
+/**
+ * Reset ETF holdings data to the bundled default
+ */
+export function resetEtfHoldingsData() {
+  etfHoldingsData = defaultEtfHoldingsData;
+}
 
 /**
  * Decompose the portfolio: expand each ETF into its underlying holdings,
