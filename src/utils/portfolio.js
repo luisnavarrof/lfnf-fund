@@ -86,9 +86,22 @@ export function calculateHoldingValues(portfolio, quotes, usdClpRate) {
   const totalCLP = portfolio.fund.totalValueCLP;
   const totalUSD = totalCLP / usdClpRate;
 
+  // First pass: compute weighted daily change
+  let weightedChange = 0;
+  let hasAnyData = false;
+  for (const holding of portfolio.holdings) {
+    const quote = quotes[holding.ticker];
+    if (quote && quote.dp !== undefined) {
+      weightedChange += (holding.allocation / 100) * quote.dp;
+      hasAnyData = true;
+    }
+  }
+  const liveTotalCLP = hasAnyData ? totalCLP * (1 + weightedChange / 100) : totalCLP;
+  const liveTotalUSD = liveTotalCLP / usdClpRate;
+
   return portfolio.holdings.map(holding => {
     const quote = quotes[holding.ticker];
-    const valueCLP = (holding.allocation / 100) * totalCLP;
+    const valueCLP = (holding.allocation / 100) * liveTotalCLP;
     const valueUSD = valueCLP / usdClpRate;
 
     return {
@@ -128,6 +141,10 @@ export function calculatePortfolioSummary(enrichedHoldings, portfolio, usdClpRat
   const dailyChangeCLP = hasAnyData ? (weightedChange / 100) * totalCLP : 0;
   const dailyChangeUSD = hasAnyData ? (weightedChange / 100) * totalUSD : 0;
 
+  // Live total: base value adjusted by today's weighted price change
+  const liveTotalCLP = hasAnyData ? totalCLP * (1 + weightedChange / 100) : totalCLP;
+  const liveTotalUSD = liveTotalCLP / usdClpRate;
+
   // Count by type
   const etfCount = enrichedHoldings.filter(h => h.type === 'ETF').length;
   const stockCount = enrichedHoldings.filter(h => h.type === 'Stock').length;
@@ -151,6 +168,8 @@ export function calculatePortfolioSummary(enrichedHoldings, portfolio, usdClpRat
   return {
     totalCLP,
     totalUSD,
+    liveTotalCLP,
+    liveTotalUSD,
     dailyChangePercent: weightedChange,
     dailyChangeCLP,
     dailyChangeUSD,

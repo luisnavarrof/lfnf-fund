@@ -25,6 +25,55 @@ export function resetEtfHoldingsData() {
   etfHoldingsData = defaultEtfHoldingsData;
 }
 
+// Runtime cache for dynamically fetched ETF holdings
+const dynamicEtfCache = new Map();
+
+/**
+ * Register dynamically fetched ETF holdings data (from Finnhub API).
+ * @param {string} ticker - ETF ticker
+ * @param {Object} data - { holdings: [{symbol, name, share, percent}], ...}
+ */
+export function registerDynamicEtfHoldings(ticker, data) {
+  if (!data || !Array.isArray(data.holdings) || data.holdings.length === 0) return;
+  // Normalize Finnhub ETF holdings format to match our static format
+  const totalWeight = data.holdings.reduce((sum, h) => sum + (h.percent || 0), 0);
+  const coverage = Math.min(totalWeight * 100, 100);
+  dynamicEtfCache.set(ticker, {
+    name: data.symbol || ticker,
+    source: 'Finnhub API (dynamic)',
+    coverage,
+    holdings: data.holdings
+      .filter(h => h.symbol && h.percent > 0)
+      .slice(0, 50) // Top 50 holdings
+      .map(h => ({
+        ticker: h.symbol,
+        name: h.name || h.symbol,
+        weight: h.percent * 100, // Finnhub returns as decimal (0.07 = 7%)
+        sector: h.sector || 'Other',
+      })),
+  });
+}
+
+/**
+ * Get holdings data for an ETF, checking static data first, then dynamic cache.
+ * @param {string} ticker
+ * @returns {Object|null}
+ */
+function getEtfData(ticker) {
+  if (etfHoldingsData[ticker]) return etfHoldingsData[ticker];
+  if (dynamicEtfCache.has(ticker)) return dynamicEtfCache.get(ticker);
+  return null;
+}
+
+/**
+ * Check if an ETF has decomposition data available (static or dynamic).
+ * @param {string} ticker
+ * @returns {boolean}
+ */
+export function hasEtfDecomposition(ticker) {
+  return !!getEtfData(ticker);
+}
+
 /**
  * Decompose the portfolio: expand each ETF into its underlying holdings,
  * then consolidate duplicate tickers across multiple ETFs and direct holdings.
@@ -37,9 +86,10 @@ export function decomposePortfolio(holdings) {
   const consolidated = new Map();
 
   for (const holding of holdings) {
-    if (holding.type === 'ETF' && etfHoldingsData[holding.ticker]) {
+    const etfData = holding.type === 'ETF' ? getEtfData(holding.ticker) : null;
+
+    if (holding.type === 'ETF' && etfData) {
       // Decompose ETF
-      const etfData = etfHoldingsData[holding.ticker];
       const etfAllocation = holding.allocation; // % of LFNF
 
       for (const sub of etfData.holdings) {
@@ -71,8 +121,8 @@ export function decomposePortfolio(holdings) {
           });
         }
       }
-    } else if (holding.type === 'Stock') {
-      // Direct holding
+    } else if (holding.type === 'Stock' || holding.type === 'Fund') {
+      // Direct holding (stocks and funds/investment companies)
       const key = normalizeTickerKey(holding.ticker);
 
       if (consolidated.has(key)) {
@@ -101,7 +151,7 @@ export function decomposePortfolio(holdings) {
           }],
         });
       }
-    } else if (holding.type === 'ETF' && !etfHoldingsData[holding.ticker]) {
+    } else if (holding.type === 'ETF' && !etfData) {
       // ETF without decomposition data — show as-is
       consolidated.set(holding.ticker, {
         ticker: holding.ticker,
@@ -158,7 +208,7 @@ export function getCoverage(holdings) {
     if (h.type === 'Stock') {
       covered += h.allocation;
     } else if (h.type === 'ETF') {
-      const etfData = etfHoldingsData[h.ticker];
+      const etfData = getEtfData(h.ticker);
       if (etfData) {
         covered += h.allocation * (etfData.coverage / 100);
         uncovered += h.allocation * (1 - etfData.coverage / 100);

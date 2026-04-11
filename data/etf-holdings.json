@@ -9,36 +9,186 @@
     "source": "iShares / BlackRock",
     "coverage": 75,
     "holdings": [
-      { "ticker": "NVDA", "name": "NVIDIA Corporation", "weight": 8.27, "sector": "Technology" },
-      { "ticker": "AAPL", "name": "Apple Inc.", "weight": 7.78, "sector": "Technology" },
-      { "ticker": "MSFT", "name": "Microsoft Corporation", "weight": 5.25, "sector": "Technology" },
-      { "ticker": "AMZN", "name": "Amazon.com, Inc.", "weight": 3.84, "sector": "Consumer Discretionary" },
-      { "ticker": "JPM", "name": "JPMorgan Chase & Co.", "weight": 3.66, "sector": "Financials" },
-      { "ticker": "AVGO", "name": "Broadcom Inc.", "weight": 2.80, "sector": "Technology" },
-      { "ticker": "GOOGL", "name": "Alphabet Inc. Class A", "weight": 2.73, "sector": "Technology" },
-      { "ticker": "CSCO", "name": "Cisco Systems, Inc.", "weight": 2.62, "sector": "Technology" },
-      { "ticker": "BRK.B", "name": "Berkshire Hathaway Inc.", "weight": 2.58, "sector": "Financials" },
-      { "ticker": "META", "name": "Meta Platforms, Inc.", "weight": 2.52, "sector": "Technology" },
-      { "ticker": "WMT", "name": "Walmart Inc.", "weight": 2.20, "sector": "Consumer Staples" },
-      { "ticker": "V", "name": "Visa Inc.", "weight": 2.10, "sector": "Financials" },
-      { "ticker": "UNH", "name": "UnitedHealth Group Inc.", "weight": 2.05, "sector": "Healthcare" },
-      { "ticker": "MA", "name": "Mastercard Inc.", "weight": 1.95, "sector": "Financials" },
-      { "ticker": "HD", "name": "The Home Depot, Inc.", "weight": 1.85, "sector": "Consumer Discretionary" },
-      { "ticker": "PG", "name": "Procter & Gamble Co.", "weight": 1.75, "sector": "Consumer Staples" },
-      { "ticker": "XOM", "name": "Exxon Mobil Corporation", "weight": 1.65, "sector": "Energy" },
-      { "ticker": "JNJ", "name": "Johnson & Johnson", "weight": 1.55, "sector": "Healthcare" },
-      { "ticker": "ABBV", "name": "AbbVie Inc.", "weight": 1.50, "sector": "Healthcare" },
-      { "ticker": "CRM", "name": "Salesforce, Inc.", "weight": 1.45, "sector": "Technology" },
-      { "ticker": "BAC", "name": "Bank of America Corp.", "weight": 1.40, "sector": "Financials" },
-      { "ticker": "COST", "name": "Costco Wholesale Corp.", "weight": 1.35, "sector": "Consumer Staples" },
-      { "ticker": "NFLX", "name": "Netflix, Inc.", "weight": 1.30, "sector": "Technology" },
-      { "ticker": "AMD", "name": "Advanced Micro Devices", "weight": 1.25, "sector": "Technology" },
-      { "ticker": "LIN", "name": "Linde plc", "weight": 1.20, "sector": "Materials" },
-      { "ticker": "ADBE", "name": "Adobe Inc.", "weight": 1.15, "sector": "Technology" },
-      { "ticker": "TXN", "name": "Texas Instruments Inc.", "weight": 1.10, "sector": "Technology" },
-      { "ticker": "ORCL", "name": "Oracle Corporation", "weight": 1.05, "sector": "Technology" },
-      { "ticker": "WFC", "name": "Wells Fargo & Company", "weight": 1.00, "sector": "Financials" },
-      { "ticker": "GS", "name": "Goldman Sachs Group", "weight": 0.95, "sector": "Financials" }
+      {
+        "ticker": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight": 8.27,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AAPL",
+        "name": "Apple Inc.",
+        "weight": 7.78,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight": 5.25,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AMZN",
+        "name": "Amazon.com, Inc.",
+        "weight": 3.84,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "JPM",
+        "name": "JPMorgan Chase & Co.",
+        "weight": 3.66,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight": 2.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "GOOGL",
+        "name": "Alphabet Inc. Class A",
+        "weight": 2.73,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "CSCO",
+        "name": "Cisco Systems, Inc.",
+        "weight": 2.62,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "BRK.B",
+        "name": "Berkshire Hathaway Inc.",
+        "weight": 2.58,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "META",
+        "name": "Meta Platforms, Inc.",
+        "weight": 2.52,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "WMT",
+        "name": "Walmart Inc.",
+        "weight": 2.2,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "V",
+        "name": "Visa Inc.",
+        "weight": 2.1,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "UNH",
+        "name": "UnitedHealth Group Inc.",
+        "weight": 2.05,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "MA",
+        "name": "Mastercard Inc.",
+        "weight": 1.95,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "HD",
+        "name": "The Home Depot, Inc.",
+        "weight": 1.85,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "PG",
+        "name": "Procter & Gamble Co.",
+        "weight": 1.75,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "XOM",
+        "name": "Exxon Mobil Corporation",
+        "weight": 1.65,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "JNJ",
+        "name": "Johnson & Johnson",
+        "weight": 1.55,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "ABBV",
+        "name": "AbbVie Inc.",
+        "weight": 1.5,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "CRM",
+        "name": "Salesforce, Inc.",
+        "weight": 1.45,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "BAC",
+        "name": "Bank of America Corp.",
+        "weight": 1.4,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "COST",
+        "name": "Costco Wholesale Corp.",
+        "weight": 1.35,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "NFLX",
+        "name": "Netflix, Inc.",
+        "weight": 1.3,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AMD",
+        "name": "Advanced Micro Devices",
+        "weight": 1.25,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "LIN",
+        "name": "Linde plc",
+        "weight": 1.2,
+        "sector": "Materials"
+      },
+      {
+        "ticker": "ADBE",
+        "name": "Adobe Inc.",
+        "weight": 1.15,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "TXN",
+        "name": "Texas Instruments Inc.",
+        "weight": 1.1,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "ORCL",
+        "name": "Oracle Corporation",
+        "weight": 1.05,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "WFC",
+        "name": "Wells Fargo & Company",
+        "weight": 1.0,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "GS",
+        "name": "Goldman Sachs Group",
+        "weight": 0.95,
+        "sector": "Financials"
+      }
     ]
   },
   "QQQM": {
@@ -46,26 +196,126 @@
     "source": "Invesco",
     "coverage": 65,
     "holdings": [
-      { "ticker": "NVDA", "name": "NVIDIA Corporation", "weight": 8.66, "sector": "Technology" },
-      { "ticker": "AAPL", "name": "Apple Inc.", "weight": 7.62, "sector": "Technology" },
-      { "ticker": "MSFT", "name": "Microsoft Corporation", "weight": 5.55, "sector": "Technology" },
-      { "ticker": "AMZN", "name": "Amazon.com, Inc.", "weight": 4.58, "sector": "Consumer Discretionary" },
-      { "ticker": "TSLA", "name": "Tesla, Inc.", "weight": 3.53, "sector": "Consumer Discretionary" },
-      { "ticker": "GOOGL", "name": "Alphabet Inc. Class A", "weight": 3.50, "sector": "Technology" },
-      { "ticker": "WMT", "name": "Walmart Inc.", "weight": 3.43, "sector": "Consumer Staples" },
-      { "ticker": "META", "name": "Meta Platforms, Inc.", "weight": 3.39, "sector": "Technology" },
-      { "ticker": "GOOG", "name": "Alphabet Inc. Class C", "weight": 3.25, "sector": "Technology" },
-      { "ticker": "AVGO", "name": "Broadcom Inc.", "weight": 2.99, "sector": "Technology" },
-      { "ticker": "COST", "name": "Costco Wholesale Corp.", "weight": 2.65, "sector": "Consumer Staples" },
-      { "ticker": "NFLX", "name": "Netflix, Inc.", "weight": 2.50, "sector": "Technology" },
-      { "ticker": "TMUS", "name": "T-Mobile US, Inc.", "weight": 2.20, "sector": "Telecom" },
-      { "ticker": "AMD", "name": "Advanced Micro Devices", "weight": 2.10, "sector": "Technology" },
-      { "ticker": "ADBE", "name": "Adobe Inc.", "weight": 1.90, "sector": "Technology" },
-      { "ticker": "LIN", "name": "Linde plc", "weight": 1.80, "sector": "Materials" },
-      { "ticker": "ISRG", "name": "Intuitive Surgical, Inc.", "weight": 1.70, "sector": "Healthcare" },
-      { "ticker": "CSCO", "name": "Cisco Systems, Inc.", "weight": 1.65, "sector": "Technology" },
-      { "ticker": "INTU", "name": "Intuit Inc.", "weight": 1.55, "sector": "Technology" },
-      { "ticker": "QCOM", "name": "QUALCOMM Inc.", "weight": 1.45, "sector": "Technology" }
+      {
+        "ticker": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight": 8.66,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AAPL",
+        "name": "Apple Inc.",
+        "weight": 7.62,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight": 5.55,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AMZN",
+        "name": "Amazon.com, Inc.",
+        "weight": 4.58,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "TSLA",
+        "name": "Tesla, Inc.",
+        "weight": 3.53,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "GOOGL",
+        "name": "Alphabet Inc. Class A",
+        "weight": 3.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "WMT",
+        "name": "Walmart Inc.",
+        "weight": 3.43,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "META",
+        "name": "Meta Platforms, Inc.",
+        "weight": 3.39,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "GOOG",
+        "name": "Alphabet Inc. Class C",
+        "weight": 3.25,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight": 2.99,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "COST",
+        "name": "Costco Wholesale Corp.",
+        "weight": 2.65,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "NFLX",
+        "name": "Netflix, Inc.",
+        "weight": 2.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "TMUS",
+        "name": "T-Mobile US, Inc.",
+        "weight": 2.2,
+        "sector": "Telecom"
+      },
+      {
+        "ticker": "AMD",
+        "name": "Advanced Micro Devices",
+        "weight": 2.1,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "ADBE",
+        "name": "Adobe Inc.",
+        "weight": 1.9,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "LIN",
+        "name": "Linde plc",
+        "weight": 1.8,
+        "sector": "Materials"
+      },
+      {
+        "ticker": "ISRG",
+        "name": "Intuitive Surgical, Inc.",
+        "weight": 1.7,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "CSCO",
+        "name": "Cisco Systems, Inc.",
+        "weight": 1.65,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "INTU",
+        "name": "Intuit Inc.",
+        "weight": 1.55,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "QCOM",
+        "name": "QUALCOMM Inc.",
+        "weight": 1.45,
+        "sector": "Technology"
+      }
     ]
   },
   "XAR": {
@@ -73,21 +323,96 @@
     "source": "State Street / SSGA",
     "coverage": 50,
     "holdings": [
-      { "ticker": "BWXT", "name": "BWX Technologies, Inc.", "weight": 3.52, "sector": "Aerospace & Defense" },
-      { "ticker": "CW", "name": "Curtiss-Wright Corporation", "weight": 3.23, "sector": "Aerospace & Defense" },
-      { "ticker": "GD", "name": "General Dynamics Corp.", "weight": 3.18, "sector": "Aerospace & Defense" },
-      { "ticker": "BA", "name": "The Boeing Company", "weight": 3.17, "sector": "Aerospace & Defense" },
-      { "ticker": "HII", "name": "Huntington Ingalls Industries", "weight": 3.15, "sector": "Aerospace & Defense" },
-      { "ticker": "LHX", "name": "L3Harris Technologies", "weight": 3.15, "sector": "Aerospace & Defense" },
-      { "ticker": "LMT", "name": "Lockheed Martin Corp.", "weight": 3.14, "sector": "Aerospace & Defense" },
-      { "ticker": "WWD", "name": "Woodward, Inc.", "weight": 3.14, "sector": "Aerospace & Defense" },
-      { "ticker": "CRS", "name": "Carpenter Technology Corp.", "weight": 3.09, "sector": "Materials" },
-      { "ticker": "RTX", "name": "RTX Corporation", "weight": 3.06, "sector": "Aerospace & Defense" },
-      { "ticker": "NOC", "name": "Northrop Grumman Corp.", "weight": 3.00, "sector": "Aerospace & Defense" },
-      { "ticker": "TDG", "name": "TransDigm Group Inc.", "weight": 2.95, "sector": "Aerospace & Defense" },
-      { "ticker": "HWM", "name": "Howmet Aerospace Inc.", "weight": 2.90, "sector": "Aerospace & Defense" },
-      { "ticker": "TXT", "name": "Textron Inc.", "weight": 2.85, "sector": "Aerospace & Defense" },
-      { "ticker": "AXON", "name": "Axon Enterprise, Inc.", "weight": 2.80, "sector": "Technology" }
+      {
+        "ticker": "BWXT",
+        "name": "BWX Technologies, Inc.",
+        "weight": 3.52,
+        "sector": "Aerospace & Defense"
+      },
+      {
+        "ticker": "CW",
+        "name": "Curtiss-Wright Corporation",
+        "weight": 3.23,
+        "sector": "Aerospace & Defense"
+      },
+      {
+        "ticker": "GD",
+        "name": "General Dynamics Corp.",
+        "weight": 3.18,
+        "sector": "Aerospace & Defense"
+      },
+      {
+        "ticker": "BA",
+        "name": "The Boeing Company",
+        "weight": 3.17,
+        "sector": "Aerospace & Defense"
+      },
+      {
+        "ticker": "HII",
+        "name": "Huntington Ingalls Industries",
+        "weight": 3.15,
+        "sector": "Aerospace & Defense"
+      },
+      {
+        "ticker": "LHX",
+        "name": "L3Harris Technologies",
+        "weight": 3.15,
+        "sector": "Aerospace & Defense"
+      },
+      {
+        "ticker": "LMT",
+        "name": "Lockheed Martin Corp.",
+        "weight": 3.14,
+        "sector": "Aerospace & Defense"
+      },
+      {
+        "ticker": "WWD",
+        "name": "Woodward, Inc.",
+        "weight": 3.14,
+        "sector": "Aerospace & Defense"
+      },
+      {
+        "ticker": "CRS",
+        "name": "Carpenter Technology Corp.",
+        "weight": 3.09,
+        "sector": "Materials"
+      },
+      {
+        "ticker": "RTX",
+        "name": "RTX Corporation",
+        "weight": 3.06,
+        "sector": "Aerospace & Defense"
+      },
+      {
+        "ticker": "NOC",
+        "name": "Northrop Grumman Corp.",
+        "weight": 3.0,
+        "sector": "Aerospace & Defense"
+      },
+      {
+        "ticker": "TDG",
+        "name": "TransDigm Group Inc.",
+        "weight": 2.95,
+        "sector": "Aerospace & Defense"
+      },
+      {
+        "ticker": "HWM",
+        "name": "Howmet Aerospace Inc.",
+        "weight": 2.9,
+        "sector": "Aerospace & Defense"
+      },
+      {
+        "ticker": "TXT",
+        "name": "Textron Inc.",
+        "weight": 2.85,
+        "sector": "Aerospace & Defense"
+      },
+      {
+        "ticker": "AXON",
+        "name": "Axon Enterprise, Inc.",
+        "weight": 2.8,
+        "sector": "Technology"
+      }
     ]
   },
   "AVEM": {
@@ -95,21 +420,96 @@
     "source": "Avantis Investors",
     "coverage": 25,
     "holdings": [
-      { "ticker": "TSM", "name": "Taiwan Semiconductor Mfg.", "weight": 6.38, "sector": "Technology" },
-      { "ticker": "SMSN", "name": "Samsung Electronics Co.", "weight": 3.87, "sector": "Technology" },
-      { "ticker": "000660.KS", "name": "SK Hynix Inc.", "weight": 3.66, "sector": "Technology" },
-      { "ticker": "TCEHY", "name": "Tencent Holdings Ltd.", "weight": 2.06, "sector": "Technology" },
-      { "ticker": "BABA", "name": "Alibaba Group Holding", "weight": 1.05, "sector": "Consumer Discretionary" },
-      { "ticker": "PDD", "name": "PDD Holdings Inc.", "weight": 1.00, "sector": "Consumer Discretionary" },
-      { "ticker": "2317.TW", "name": "Hon Hai Precision Industry", "weight": 0.66, "sector": "Technology" },
-      { "ticker": "AU", "name": "AngloGold Ashanti plc", "weight": 0.66, "sector": "Materials" },
-      { "ticker": "VALE", "name": "Vale S.A.", "weight": 0.60, "sector": "Materials" },
-      { "ticker": "INFY", "name": "Infosys Limited", "weight": 0.55, "sector": "Technology" },
-      { "ticker": "HDB", "name": "HDFC Bank Ltd.", "weight": 0.50, "sector": "Financials" },
-      { "ticker": "RELIANCE.NS", "name": "Reliance Industries Ltd.", "weight": 0.48, "sector": "Energy" },
-      { "ticker": "JD", "name": "JD.com, Inc.", "weight": 0.45, "sector": "Consumer Discretionary" },
-      { "ticker": "MELI", "name": "MercadoLibre, Inc.", "weight": 0.42, "sector": "Consumer Discretionary" },
-      { "ticker": "NU", "name": "Nu Holdings Ltd.", "weight": 0.40, "sector": "Financials" }
+      {
+        "ticker": "TSM",
+        "name": "Taiwan Semiconductor Mfg.",
+        "weight": 6.38,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "SMSN",
+        "name": "Samsung Electronics Co.",
+        "weight": 3.87,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "000660.KS",
+        "name": "SK Hynix Inc.",
+        "weight": 3.66,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "TCEHY",
+        "name": "Tencent Holdings Ltd.",
+        "weight": 2.06,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "BABA",
+        "name": "Alibaba Group Holding",
+        "weight": 1.05,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "PDD",
+        "name": "PDD Holdings Inc.",
+        "weight": 1.0,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "2317.TW",
+        "name": "Hon Hai Precision Industry",
+        "weight": 0.66,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AU",
+        "name": "AngloGold Ashanti plc",
+        "weight": 0.66,
+        "sector": "Materials"
+      },
+      {
+        "ticker": "VALE",
+        "name": "Vale S.A.",
+        "weight": 0.6,
+        "sector": "Materials"
+      },
+      {
+        "ticker": "INFY",
+        "name": "Infosys Limited",
+        "weight": 0.55,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "HDB",
+        "name": "HDFC Bank Ltd.",
+        "weight": 0.5,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "RELIANCE.NS",
+        "name": "Reliance Industries Ltd.",
+        "weight": 0.48,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "JD",
+        "name": "JD.com, Inc.",
+        "weight": 0.45,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "MELI",
+        "name": "MercadoLibre, Inc.",
+        "weight": 0.42,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "NU",
+        "name": "Nu Holdings Ltd.",
+        "weight": 0.4,
+        "sector": "Financials"
+      }
     ]
   },
   "QTUM": {
@@ -117,21 +517,96 @@
     "source": "Defiance ETFs",
     "coverage": 27,
     "holdings": [
-      { "ticker": "TER", "name": "Teradyne, Inc.", "weight": 1.93, "sector": "Technology" },
-      { "ticker": "TSEM", "name": "Tower Semiconductor Ltd.", "weight": 1.88, "sector": "Technology" },
-      { "ticker": "MU", "name": "Micron Technology, Inc.", "weight": 1.80, "sector": "Technology" },
-      { "ticker": "NOK", "name": "Nokia Oyj", "weight": 1.78, "sector": "Telecom" },
-      { "ticker": "MKSI", "name": "MKS Instruments, Inc.", "weight": 1.77, "sector": "Technology" },
-      { "ticker": "LMT", "name": "Lockheed Martin Corp.", "weight": 1.70, "sector": "Aerospace & Defense" },
-      { "ticker": "COHR", "name": "Coherent Corp.", "weight": 1.70, "sector": "Technology" },
-      { "ticker": "STM", "name": "STMicroelectronics N.V.", "weight": 1.69, "sector": "Technology" },
-      { "ticker": "ONTO", "name": "Onto Innovation Inc.", "weight": 1.64, "sector": "Technology" },
-      { "ticker": "LRCX", "name": "Lam Research Corp.", "weight": 1.64, "sector": "Technology" },
-      { "ticker": "IONQ", "name": "IonQ, Inc.", "weight": 1.55, "sector": "Technology" },
-      { "ticker": "RGTI", "name": "Rigetti Computing, Inc.", "weight": 1.50, "sector": "Technology" },
-      { "ticker": "QUBT", "name": "Quantum Computing Inc.", "weight": 1.45, "sector": "Technology" },
-      { "ticker": "IBM", "name": "IBM Corporation", "weight": 1.40, "sector": "Technology" },
-      { "ticker": "GOOG", "name": "Alphabet Inc.", "weight": 1.35, "sector": "Technology" }
+      {
+        "ticker": "TER",
+        "name": "Teradyne, Inc.",
+        "weight": 1.93,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "TSEM",
+        "name": "Tower Semiconductor Ltd.",
+        "weight": 1.88,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "MU",
+        "name": "Micron Technology, Inc.",
+        "weight": 1.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "NOK",
+        "name": "Nokia Oyj",
+        "weight": 1.78,
+        "sector": "Telecom"
+      },
+      {
+        "ticker": "MKSI",
+        "name": "MKS Instruments, Inc.",
+        "weight": 1.77,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "LMT",
+        "name": "Lockheed Martin Corp.",
+        "weight": 1.7,
+        "sector": "Aerospace & Defense"
+      },
+      {
+        "ticker": "COHR",
+        "name": "Coherent Corp.",
+        "weight": 1.7,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "STM",
+        "name": "STMicroelectronics N.V.",
+        "weight": 1.69,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "ONTO",
+        "name": "Onto Innovation Inc.",
+        "weight": 1.64,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "LRCX",
+        "name": "Lam Research Corp.",
+        "weight": 1.64,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "IONQ",
+        "name": "IonQ, Inc.",
+        "weight": 1.55,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "RGTI",
+        "name": "Rigetti Computing, Inc.",
+        "weight": 1.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "QUBT",
+        "name": "Quantum Computing Inc.",
+        "weight": 1.45,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "IBM",
+        "name": "IBM Corporation",
+        "weight": 1.4,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "GOOG",
+        "name": "Alphabet Inc.",
+        "weight": 1.35,
+        "sector": "Technology"
+      }
     ]
   },
   "CQQQ": {
@@ -139,16 +614,66 @@
     "source": "Invesco",
     "coverage": 53,
     "holdings": [
-      { "ticker": "TCEHY", "name": "Tencent Holdings Ltd.", "weight": 9.70, "sector": "Technology" },
-      { "ticker": "PDD", "name": "PDD Holdings Inc.", "weight": 9.60, "sector": "Consumer Discretionary" },
-      { "ticker": "3690.HK", "name": "Meituan Class B", "weight": 9.20, "sector": "Consumer Discretionary" },
-      { "ticker": "BIDU", "name": "Baidu, Inc.", "weight": 6.80, "sector": "Technology" },
-      { "ticker": "1024.HK", "name": "Kuaishou Technology", "weight": 4.90, "sector": "Technology" },
-      { "ticker": "9660.HK", "name": "Horizon Robotics", "weight": 3.00, "sector": "Technology" },
-      { "ticker": "1347.HK", "name": "Hua Hong Semiconductor", "weight": 2.80, "sector": "Technology" },
-      { "ticker": "0020.HK", "name": "SenseTime Group Inc.", "weight": 2.70, "sector": "Technology" },
-      { "ticker": "BILI", "name": "Bilibili Inc.", "weight": 2.60, "sector": "Technology" },
-      { "ticker": "HYGN", "name": "Hygon Information Tech.", "weight": 2.00, "sector": "Technology" }
+      {
+        "ticker": "TCEHY",
+        "name": "Tencent Holdings Ltd.",
+        "weight": 9.7,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "PDD",
+        "name": "PDD Holdings Inc.",
+        "weight": 9.6,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "3690.HK",
+        "name": "Meituan Class B",
+        "weight": 9.2,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "BIDU",
+        "name": "Baidu, Inc.",
+        "weight": 6.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "1024.HK",
+        "name": "Kuaishou Technology",
+        "weight": 4.9,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "9660.HK",
+        "name": "Horizon Robotics",
+        "weight": 3.0,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "1347.HK",
+        "name": "Hua Hong Semiconductor",
+        "weight": 2.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "0020.HK",
+        "name": "SenseTime Group Inc.",
+        "weight": 2.7,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "BILI",
+        "name": "Bilibili Inc.",
+        "weight": 2.6,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "HYGN",
+        "name": "Hygon Information Tech.",
+        "weight": 2.0,
+        "sector": "Technology"
+      }
     ]
   },
   "MAGS": {
@@ -156,13 +681,2121 @@
     "source": "Roundhill Investments",
     "coverage": 100,
     "holdings": [
-      { "ticker": "GOOGL", "name": "Alphabet Inc.", "weight": 15.05, "sector": "Technology" },
-      { "ticker": "NVDA", "name": "NVIDIA Corporation", "weight": 14.47, "sector": "Technology" },
-      { "ticker": "AMZN", "name": "Amazon.com, Inc.", "weight": 14.46, "sector": "Consumer Discretionary" },
-      { "ticker": "META", "name": "Meta Platforms, Inc.", "weight": 14.26, "sector": "Technology" },
-      { "ticker": "MSFT", "name": "Microsoft Corporation", "weight": 14.18, "sector": "Technology" },
-      { "ticker": "AAPL", "name": "Apple Inc.", "weight": 14.11, "sector": "Technology" },
-      { "ticker": "TSLA", "name": "Tesla, Inc.", "weight": 13.16, "sector": "Consumer Discretionary" }
+      {
+        "ticker": "GOOGL",
+        "name": "Alphabet Inc.",
+        "weight": 15.05,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight": 14.47,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AMZN",
+        "name": "Amazon.com, Inc.",
+        "weight": 14.46,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "META",
+        "name": "Meta Platforms, Inc.",
+        "weight": 14.26,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight": 14.18,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AAPL",
+        "name": "Apple Inc.",
+        "weight": 14.11,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "TSLA",
+        "name": "Tesla, Inc.",
+        "weight": 13.16,
+        "sector": "Consumer Discretionary"
+      }
+    ]
+  },
+  "VOO": {
+    "name": "Vanguard S&P 500 ETF",
+    "source": "Vanguard",
+    "coverage": 60,
+    "holdings": [
+      {
+        "ticker": "AAPL",
+        "name": "Apple Inc.",
+        "weight": 7.2,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight": 6.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight": 6.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AMZN",
+        "name": "Amazon.com, Inc.",
+        "weight": 3.9,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "META",
+        "name": "Meta Platforms, Inc.",
+        "weight": 2.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "GOOGL",
+        "name": "Alphabet Inc. Class A",
+        "weight": 2.3,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "GOOG",
+        "name": "Alphabet Inc. Class C",
+        "weight": 1.95,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight": 2.1,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "TSLA",
+        "name": "Tesla, Inc.",
+        "weight": 1.9,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "BRK.B",
+        "name": "Berkshire Hathaway Inc.",
+        "weight": 1.85,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "JPM",
+        "name": "JPMorgan Chase & Co.",
+        "weight": 1.5,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "LLY",
+        "name": "Eli Lilly and Company",
+        "weight": 1.45,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "UNH",
+        "name": "UnitedHealth Group Inc.",
+        "weight": 1.3,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "V",
+        "name": "Visa Inc.",
+        "weight": 1.2,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "XOM",
+        "name": "Exxon Mobil Corporation",
+        "weight": 1.15,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "COST",
+        "name": "Costco Wholesale Corp.",
+        "weight": 1.1,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "MA",
+        "name": "Mastercard Inc.",
+        "weight": 1.05,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "HD",
+        "name": "The Home Depot, Inc.",
+        "weight": 1.0,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "PG",
+        "name": "Procter & Gamble Co.",
+        "weight": 0.98,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "WMT",
+        "name": "Walmart Inc.",
+        "weight": 0.95,
+        "sector": "Consumer Staples"
+      }
+    ]
+  },
+  "SPY": {
+    "name": "SPDR S&P 500 ETF Trust",
+    "source": "State Street / SSGA",
+    "coverage": 60,
+    "holdings": [
+      {
+        "ticker": "AAPL",
+        "name": "Apple Inc.",
+        "weight": 7.18,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight": 6.78,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight": 6.48,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AMZN",
+        "name": "Amazon.com, Inc.",
+        "weight": 3.88,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "META",
+        "name": "Meta Platforms, Inc.",
+        "weight": 2.78,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "GOOGL",
+        "name": "Alphabet Inc. Class A",
+        "weight": 2.28,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "GOOG",
+        "name": "Alphabet Inc. Class C",
+        "weight": 1.93,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight": 2.08,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "TSLA",
+        "name": "Tesla, Inc.",
+        "weight": 1.88,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "BRK.B",
+        "name": "Berkshire Hathaway Inc.",
+        "weight": 1.83,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "JPM",
+        "name": "JPMorgan Chase & Co.",
+        "weight": 1.48,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "LLY",
+        "name": "Eli Lilly and Company",
+        "weight": 1.43,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "UNH",
+        "name": "UnitedHealth Group Inc.",
+        "weight": 1.28,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "V",
+        "name": "Visa Inc.",
+        "weight": 1.18,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "XOM",
+        "name": "Exxon Mobil Corporation",
+        "weight": 1.13,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "COST",
+        "name": "Costco Wholesale Corp.",
+        "weight": 1.08,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "MA",
+        "name": "Mastercard Inc.",
+        "weight": 1.03,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "HD",
+        "name": "The Home Depot, Inc.",
+        "weight": 0.98,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "PG",
+        "name": "Procter & Gamble Co.",
+        "weight": 0.96,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "WMT",
+        "name": "Walmart Inc.",
+        "weight": 0.93,
+        "sector": "Consumer Staples"
+      }
+    ]
+  },
+  "VTI": {
+    "name": "Vanguard Total Stock Market ETF",
+    "source": "Vanguard",
+    "coverage": 45,
+    "holdings": [
+      {
+        "ticker": "AAPL",
+        "name": "Apple Inc.",
+        "weight": 6.1,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight": 5.75,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight": 5.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AMZN",
+        "name": "Amazon.com, Inc.",
+        "weight": 3.3,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "META",
+        "name": "Meta Platforms, Inc.",
+        "weight": 2.35,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "GOOGL",
+        "name": "Alphabet Inc. Class A",
+        "weight": 1.95,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "GOOG",
+        "name": "Alphabet Inc. Class C",
+        "weight": 1.65,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight": 1.78,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "TSLA",
+        "name": "Tesla, Inc.",
+        "weight": 1.6,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "BRK.B",
+        "name": "Berkshire Hathaway Inc.",
+        "weight": 1.55,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "JPM",
+        "name": "JPMorgan Chase & Co.",
+        "weight": 1.28,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "LLY",
+        "name": "Eli Lilly and Company",
+        "weight": 1.22,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "UNH",
+        "name": "UnitedHealth Group Inc.",
+        "weight": 1.1,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "V",
+        "name": "Visa Inc.",
+        "weight": 1.02,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "XOM",
+        "name": "Exxon Mobil Corporation",
+        "weight": 0.97,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "COST",
+        "name": "Costco Wholesale Corp.",
+        "weight": 0.93,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "MA",
+        "name": "Mastercard Inc.",
+        "weight": 0.89,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "HD",
+        "name": "The Home Depot, Inc.",
+        "weight": 0.85,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "PG",
+        "name": "Procter & Gamble Co.",
+        "weight": 0.83,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "WMT",
+        "name": "Walmart Inc.",
+        "weight": 0.8,
+        "sector": "Consumer Staples"
+      }
+    ]
+  },
+  "QQQ": {
+    "name": "Invesco QQQ Trust",
+    "source": "Invesco",
+    "coverage": 65,
+    "holdings": [
+      {
+        "ticker": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight": 8.7,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AAPL",
+        "name": "Apple Inc.",
+        "weight": 7.65,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight": 5.58,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AMZN",
+        "name": "Amazon.com, Inc.",
+        "weight": 4.6,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "TSLA",
+        "name": "Tesla, Inc.",
+        "weight": 3.55,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "GOOGL",
+        "name": "Alphabet Inc. Class A",
+        "weight": 3.52,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "META",
+        "name": "Meta Platforms, Inc.",
+        "weight": 3.42,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "GOOG",
+        "name": "Alphabet Inc. Class C",
+        "weight": 3.28,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight": 3.02,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "COST",
+        "name": "Costco Wholesale Corp.",
+        "weight": 2.68,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "NFLX",
+        "name": "Netflix, Inc.",
+        "weight": 2.52,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "TMUS",
+        "name": "T-Mobile US, Inc.",
+        "weight": 2.22,
+        "sector": "Telecom"
+      },
+      {
+        "ticker": "AMD",
+        "name": "Advanced Micro Devices",
+        "weight": 2.12,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "ADBE",
+        "name": "Adobe Inc.",
+        "weight": 1.92,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "LIN",
+        "name": "Linde plc",
+        "weight": 1.82,
+        "sector": "Materials"
+      },
+      {
+        "ticker": "ISRG",
+        "name": "Intuitive Surgical, Inc.",
+        "weight": 1.72,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "CSCO",
+        "name": "Cisco Systems, Inc.",
+        "weight": 1.67,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "INTU",
+        "name": "Intuit Inc.",
+        "weight": 1.57,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "QCOM",
+        "name": "QUALCOMM Inc.",
+        "weight": 1.47,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "WMT",
+        "name": "Walmart Inc.",
+        "weight": 1.42,
+        "sector": "Consumer Staples"
+      }
+    ]
+  },
+  "IVV": {
+    "name": "iShares Core S&P 500 ETF",
+    "source": "iShares / BlackRock",
+    "coverage": 60,
+    "holdings": [
+      {
+        "ticker": "AAPL",
+        "name": "Apple Inc.",
+        "weight": 7.15,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight": 6.75,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight": 6.45,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AMZN",
+        "name": "Amazon.com, Inc.",
+        "weight": 3.85,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "META",
+        "name": "Meta Platforms, Inc.",
+        "weight": 2.75,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "GOOGL",
+        "name": "Alphabet Inc. Class A",
+        "weight": 2.25,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "GOOG",
+        "name": "Alphabet Inc. Class C",
+        "weight": 1.9,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight": 2.05,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "TSLA",
+        "name": "Tesla, Inc.",
+        "weight": 1.85,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "BRK.B",
+        "name": "Berkshire Hathaway Inc.",
+        "weight": 1.8,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "JPM",
+        "name": "JPMorgan Chase & Co.",
+        "weight": 1.45,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "LLY",
+        "name": "Eli Lilly and Company",
+        "weight": 1.4,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "UNH",
+        "name": "UnitedHealth Group Inc.",
+        "weight": 1.25,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "V",
+        "name": "Visa Inc.",
+        "weight": 1.15,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "XOM",
+        "name": "Exxon Mobil Corporation",
+        "weight": 1.1,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "COST",
+        "name": "Costco Wholesale Corp.",
+        "weight": 1.05,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "MA",
+        "name": "Mastercard Inc.",
+        "weight": 1.0,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "HD",
+        "name": "The Home Depot, Inc.",
+        "weight": 0.95,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "PG",
+        "name": "Procter & Gamble Co.",
+        "weight": 0.93,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "NFLX",
+        "name": "Netflix, Inc.",
+        "weight": 0.9,
+        "sector": "Technology"
+      }
+    ]
+  },
+  "VWO": {
+    "name": "Vanguard FTSE Emerging Markets ETF",
+    "source": "Vanguard",
+    "coverage": 30,
+    "holdings": [
+      {
+        "ticker": "TSM",
+        "name": "Taiwan Semiconductor Mfg.",
+        "weight": 6.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "TCEHY",
+        "name": "Tencent Holdings Ltd.",
+        "weight": 3.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "BABA",
+        "name": "Alibaba Group Holding",
+        "weight": 2.7,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "PDD",
+        "name": "PDD Holdings Inc.",
+        "weight": 1.65,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "RELIANCE.NS",
+        "name": "Reliance Industries Ltd.",
+        "weight": 1.5,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "INFY",
+        "name": "Infosys Limited",
+        "weight": 1.1,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "VALE",
+        "name": "Vale S.A.",
+        "weight": 0.95,
+        "sector": "Materials"
+      },
+      {
+        "ticker": "HDB",
+        "name": "HDFC Bank Ltd.",
+        "weight": 0.9,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "JD",
+        "name": "JD.com, Inc.",
+        "weight": 0.85,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "BIDU",
+        "name": "Baidu, Inc.",
+        "weight": 0.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "NU",
+        "name": "Nu Holdings Ltd.",
+        "weight": 0.75,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "MELI",
+        "name": "MercadoLibre, Inc.",
+        "weight": 0.72,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "NIO",
+        "name": "NIO Inc.",
+        "weight": 0.65,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "SE",
+        "name": "Sea Limited",
+        "weight": 0.6,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "CPNG",
+        "name": "Coupang, Inc.",
+        "weight": 0.55,
+        "sector": "Consumer Discretionary"
+      }
+    ]
+  },
+  "ARKK": {
+    "name": "ARK Innovation ETF",
+    "source": "ARK Invest",
+    "coverage": 65,
+    "holdings": [
+      {
+        "ticker": "TSLA",
+        "name": "Tesla, Inc.",
+        "weight": 11.5,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "COIN",
+        "name": "Coinbase Global, Inc.",
+        "weight": 7.2,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "ROKU",
+        "name": "Roku, Inc.",
+        "weight": 6.8,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "RBLX",
+        "name": "Roblox Corporation",
+        "weight": 5.5,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "SQ",
+        "name": "Block, Inc.",
+        "weight": 5.2,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "PLTR",
+        "name": "Palantir Technologies Inc.",
+        "weight": 4.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "SHOP",
+        "name": "Shopify Inc.",
+        "weight": 4.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "U",
+        "name": "Unity Software Inc.",
+        "weight": 3.8,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "DKNG",
+        "name": "DraftKings Inc.",
+        "weight": 3.5,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "HOOD",
+        "name": "Robinhood Markets, Inc.",
+        "weight": 3.2,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "CRSP",
+        "name": "CRISPR Therapeutics AG",
+        "weight": 2.8,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "TWLO",
+        "name": "Twilio Inc.",
+        "weight": 2.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "ZM",
+        "name": "Zoom Video Communications",
+        "weight": 2.3,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "PATH",
+        "name": "UiPath Inc.",
+        "weight": 2.1,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "BEAM",
+        "name": "Beam Therapeutics Inc.",
+        "weight": 1.8,
+        "sector": "Healthcare"
+      }
+    ]
+  },
+  "SCHD": {
+    "name": "Schwab U.S. Dividend Equity ETF",
+    "source": "Charles Schwab",
+    "coverage": 55,
+    "holdings": [
+      {
+        "ticker": "ABBV",
+        "name": "AbbVie Inc.",
+        "weight": 4.5,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "HD",
+        "name": "The Home Depot, Inc.",
+        "weight": 4.3,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "KO",
+        "name": "The Coca-Cola Company",
+        "weight": 4.2,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "CSCO",
+        "name": "Cisco Systems, Inc.",
+        "weight": 4.1,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "VZ",
+        "name": "Verizon Communications Inc.",
+        "weight": 4.0,
+        "sector": "Telecom"
+      },
+      {
+        "ticker": "PEP",
+        "name": "PepsiCo, Inc.",
+        "weight": 3.9,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "AMGN",
+        "name": "Amgen Inc.",
+        "weight": 3.8,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "MRK",
+        "name": "Merck & Co., Inc.",
+        "weight": 3.7,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "PFE",
+        "name": "Pfizer Inc.",
+        "weight": 3.6,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "TXN",
+        "name": "Texas Instruments Inc.",
+        "weight": 3.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "BMY",
+        "name": "Bristol-Myers Squibb Co.",
+        "weight": 3.4,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "UPS",
+        "name": "United Parcel Service, Inc.",
+        "weight": 3.3,
+        "sector": "Other"
+      },
+      {
+        "ticker": "MO",
+        "name": "Altria Group, Inc.",
+        "weight": 3.2,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "ITW",
+        "name": "Illinois Tool Works Inc.",
+        "weight": 3.1,
+        "sector": "Other"
+      },
+      {
+        "ticker": "EOG",
+        "name": "EOG Resources, Inc.",
+        "weight": 3.0,
+        "sector": "Energy"
+      }
+    ]
+  },
+  "VIG": {
+    "name": "Vanguard Dividend Appreciation ETF",
+    "source": "Vanguard",
+    "coverage": 50,
+    "holdings": [
+      {
+        "ticker": "AAPL",
+        "name": "Apple Inc.",
+        "weight": 5.1,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight": 4.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight": 4.2,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "JPM",
+        "name": "JPMorgan Chase & Co.",
+        "weight": 3.6,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "UNH",
+        "name": "UnitedHealth Group Inc.",
+        "weight": 3.4,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "V",
+        "name": "Visa Inc.",
+        "weight": 3.1,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "MA",
+        "name": "Mastercard Inc.",
+        "weight": 2.9,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "HD",
+        "name": "The Home Depot, Inc.",
+        "weight": 2.7,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "PG",
+        "name": "Procter & Gamble Co.",
+        "weight": 2.5,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "COST",
+        "name": "Costco Wholesale Corp.",
+        "weight": 2.3,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "JNJ",
+        "name": "Johnson & Johnson",
+        "weight": 2.2,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "ABBV",
+        "name": "AbbVie Inc.",
+        "weight": 2.1,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "MRK",
+        "name": "Merck & Co., Inc.",
+        "weight": 2.0,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "KO",
+        "name": "The Coca-Cola Company",
+        "weight": 1.9,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "PEP",
+        "name": "PepsiCo, Inc.",
+        "weight": 1.8,
+        "sector": "Consumer Staples"
+      }
+    ]
+  },
+  "SOXX": {
+    "name": "iShares Semiconductor ETF",
+    "source": "iShares / BlackRock",
+    "coverage": 65,
+    "holdings": [
+      {
+        "ticker": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight": 9.2,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight": 8.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AMD",
+        "name": "Advanced Micro Devices",
+        "weight": 6.2,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "QCOM",
+        "name": "QUALCOMM Inc.",
+        "weight": 5.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "TXN",
+        "name": "Texas Instruments Inc.",
+        "weight": 5.1,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "MU",
+        "name": "Micron Technology, Inc.",
+        "weight": 4.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AMAT",
+        "name": "Applied Materials, Inc.",
+        "weight": 4.2,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "LRCX",
+        "name": "Lam Research Corp.",
+        "weight": 3.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "KLAC",
+        "name": "KLA Corporation",
+        "weight": 3.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "MRVL",
+        "name": "Marvell Technology, Inc.",
+        "weight": 3.2,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "INTC",
+        "name": "Intel Corporation",
+        "weight": 2.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "ON",
+        "name": "ON Semiconductor Corporation",
+        "weight": 2.6,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "SNPS",
+        "name": "Synopsys, Inc.",
+        "weight": 2.4,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "CDNS",
+        "name": "Cadence Design Systems, Inc.",
+        "weight": 2.2,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "NXPI",
+        "name": "NXP Semiconductors N.V.",
+        "weight": 2.0,
+        "sector": "Technology"
+      }
+    ]
+  },
+  "SMH": {
+    "name": "VanEck Semiconductor ETF",
+    "source": "VanEck",
+    "coverage": 70,
+    "holdings": [
+      {
+        "ticker": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight": 12.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "TSM",
+        "name": "Taiwan Semiconductor Mfg.",
+        "weight": 10.2,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight": 7.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AMD",
+        "name": "Advanced Micro Devices",
+        "weight": 5.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "ASML",
+        "name": "ASML Holding N.V.",
+        "weight": 5.2,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "QCOM",
+        "name": "QUALCOMM Inc.",
+        "weight": 4.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "TXN",
+        "name": "Texas Instruments Inc.",
+        "weight": 4.2,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "MU",
+        "name": "Micron Technology, Inc.",
+        "weight": 3.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AMAT",
+        "name": "Applied Materials, Inc.",
+        "weight": 3.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "INTC",
+        "name": "Intel Corporation",
+        "weight": 3.0,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "LRCX",
+        "name": "Lam Research Corp.",
+        "weight": 2.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "KLAC",
+        "name": "KLA Corporation",
+        "weight": 2.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "MRVL",
+        "name": "Marvell Technology, Inc.",
+        "weight": 2.2,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "SNPS",
+        "name": "Synopsys, Inc.",
+        "weight": 2.0,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "CDNS",
+        "name": "Cadence Design Systems, Inc.",
+        "weight": 1.8,
+        "sector": "Technology"
+      }
+    ]
+  },
+  "XLK": {
+    "name": "Technology Select Sector SPDR",
+    "source": "State Street / SSGA",
+    "coverage": 70,
+    "holdings": [
+      {
+        "ticker": "AAPL",
+        "name": "Apple Inc.",
+        "weight": 15.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight": 14.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight": 14.2,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight": 4.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "CRM",
+        "name": "Salesforce, Inc.",
+        "weight": 2.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "ORCL",
+        "name": "Oracle Corporation",
+        "weight": 2.4,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AMD",
+        "name": "Advanced Micro Devices",
+        "weight": 2.2,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "ADBE",
+        "name": "Adobe Inc.",
+        "weight": 2.1,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "CSCO",
+        "name": "Cisco Systems, Inc.",
+        "weight": 2.0,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "INTU",
+        "name": "Intuit Inc.",
+        "weight": 1.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "IBM",
+        "name": "IBM Corporation",
+        "weight": 1.7,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "QCOM",
+        "name": "QUALCOMM Inc.",
+        "weight": 1.6,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AMAT",
+        "name": "Applied Materials, Inc.",
+        "weight": 1.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "TXN",
+        "name": "Texas Instruments Inc.",
+        "weight": 1.4,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "MU",
+        "name": "Micron Technology, Inc.",
+        "weight": 1.3,
+        "sector": "Technology"
+      }
+    ]
+  },
+  "XLF": {
+    "name": "Financial Select Sector SPDR",
+    "source": "State Street / SSGA",
+    "coverage": 60,
+    "holdings": [
+      {
+        "ticker": "BRK.B",
+        "name": "Berkshire Hathaway Inc.",
+        "weight": 13.5,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "JPM",
+        "name": "JPMorgan Chase & Co.",
+        "weight": 10.2,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "V",
+        "name": "Visa Inc.",
+        "weight": 4.8,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "MA",
+        "name": "Mastercard Inc.",
+        "weight": 4.2,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "BAC",
+        "name": "Bank of America Corp.",
+        "weight": 3.8,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "WFC",
+        "name": "Wells Fargo & Company",
+        "weight": 2.7,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "GS",
+        "name": "Goldman Sachs Group",
+        "weight": 2.5,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "MS",
+        "name": "Morgan Stanley",
+        "weight": 2.2,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "SPGI",
+        "name": "S&P Global Inc.",
+        "weight": 2.1,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "BLK",
+        "name": "BlackRock, Inc.",
+        "weight": 1.9,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "AXP",
+        "name": "American Express Co.",
+        "weight": 1.8,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "C",
+        "name": "Citigroup Inc.",
+        "weight": 1.7,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "SCHW",
+        "name": "Charles Schwab Corp.",
+        "weight": 1.6,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "CB",
+        "name": "Chubb Limited",
+        "weight": 1.5,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "PGR",
+        "name": "Progressive Corporation",
+        "weight": 1.4,
+        "sector": "Financials"
+      }
+    ]
+  },
+  "XLV": {
+    "name": "Health Care Select Sector SPDR",
+    "source": "State Street / SSGA",
+    "coverage": 60,
+    "holdings": [
+      {
+        "ticker": "LLY",
+        "name": "Eli Lilly and Company",
+        "weight": 11.5,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "UNH",
+        "name": "UnitedHealth Group Inc.",
+        "weight": 9.8,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "JNJ",
+        "name": "Johnson & Johnson",
+        "weight": 6.2,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "ABBV",
+        "name": "AbbVie Inc.",
+        "weight": 5.8,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "MRK",
+        "name": "Merck & Co., Inc.",
+        "weight": 4.5,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "TMO",
+        "name": "Thermo Fisher Scientific Inc.",
+        "weight": 3.8,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "ABT",
+        "name": "Abbott Laboratories",
+        "weight": 3.5,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "ISRG",
+        "name": "Intuitive Surgical, Inc.",
+        "weight": 3.2,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "DHR",
+        "name": "Danaher Corporation",
+        "weight": 2.8,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "PFE",
+        "name": "Pfizer Inc.",
+        "weight": 2.5,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "BMY",
+        "name": "Bristol-Myers Squibb Co.",
+        "weight": 2.3,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "AMGN",
+        "name": "Amgen Inc.",
+        "weight": 2.1,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "GILD",
+        "name": "Gilead Sciences, Inc.",
+        "weight": 1.8,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "VRTX",
+        "name": "Vertex Pharmaceuticals Inc.",
+        "weight": 1.6,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "SYK",
+        "name": "Stryker Corporation",
+        "weight": 1.5,
+        "sector": "Healthcare"
+      }
+    ]
+  },
+  "XLE": {
+    "name": "Energy Select Sector SPDR",
+    "source": "State Street / SSGA",
+    "coverage": 65,
+    "holdings": [
+      {
+        "ticker": "XOM",
+        "name": "Exxon Mobil Corporation",
+        "weight": 22.5,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "CVX",
+        "name": "Chevron Corporation",
+        "weight": 15.2,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "COP",
+        "name": "ConocoPhillips",
+        "weight": 7.8,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "EOG",
+        "name": "EOG Resources, Inc.",
+        "weight": 4.5,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "SLB",
+        "name": "Schlumberger Limited",
+        "weight": 3.8,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "MPC",
+        "name": "Marathon Petroleum Corp.",
+        "weight": 3.2,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "PSX",
+        "name": "Phillips 66",
+        "weight": 2.8,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "VLO",
+        "name": "Valero Energy Corp.",
+        "weight": 2.5,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "WMB",
+        "name": "Williams Companies, Inc.",
+        "weight": 2.3,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "OKE",
+        "name": "ONEOK, Inc.",
+        "weight": 2.1,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "KMI",
+        "name": "Kinder Morgan, Inc.",
+        "weight": 1.8,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "HES",
+        "name": "Hess Corporation",
+        "weight": 1.6,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "DVN",
+        "name": "Devon Energy Corp.",
+        "weight": 1.5,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "HAL",
+        "name": "Halliburton Company",
+        "weight": 1.3,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "FANG",
+        "name": "Diamondback Energy, Inc.",
+        "weight": 1.2,
+        "sector": "Energy"
+      }
+    ]
+  },
+  "GLD": {
+    "name": "SPDR Gold Shares",
+    "source": "State Street / SSGA",
+    "coverage": 100,
+    "holdings": [
+      {
+        "ticker": "GOLD_BULLION",
+        "name": "Gold Bullion",
+        "weight": 100.0,
+        "sector": "Materials"
+      }
+    ]
+  },
+  "JEPI": {
+    "name": "JPMorgan Equity Premium Income ETF",
+    "source": "JPMorgan",
+    "coverage": 40,
+    "holdings": [
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight": 3.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AMZN",
+        "name": "Amazon.com, Inc.",
+        "weight": 3.2,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "META",
+        "name": "Meta Platforms, Inc.",
+        "weight": 2.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "GOOGL",
+        "name": "Alphabet Inc. Class A",
+        "weight": 2.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "V",
+        "name": "Visa Inc.",
+        "weight": 2.3,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "PG",
+        "name": "Procter & Gamble Co.",
+        "weight": 2.1,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "UNH",
+        "name": "UnitedHealth Group Inc.",
+        "weight": 2.0,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "HD",
+        "name": "The Home Depot, Inc.",
+        "weight": 1.9,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "MA",
+        "name": "Mastercard Inc.",
+        "weight": 1.8,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "ABBV",
+        "name": "AbbVie Inc.",
+        "weight": 1.7,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "JNJ",
+        "name": "Johnson & Johnson",
+        "weight": 1.6,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "KO",
+        "name": "The Coca-Cola Company",
+        "weight": 1.5,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "PEP",
+        "name": "PepsiCo, Inc.",
+        "weight": 1.4,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "MRK",
+        "name": "Merck & Co., Inc.",
+        "weight": 1.3,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "CRM",
+        "name": "Salesforce, Inc.",
+        "weight": 1.2,
+        "sector": "Technology"
+      }
+    ]
+  },
+  "JEPQ": {
+    "name": "JPMorgan Nasdaq Equity Premium Income ETF",
+    "source": "JPMorgan",
+    "coverage": 50,
+    "holdings": [
+      {
+        "ticker": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight": 7.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AAPL",
+        "name": "Apple Inc.",
+        "weight": 6.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight": 5.2,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AMZN",
+        "name": "Amazon.com, Inc.",
+        "weight": 4.1,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "META",
+        "name": "Meta Platforms, Inc.",
+        "weight": 3.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "GOOGL",
+        "name": "Alphabet Inc. Class A",
+        "weight": 3.0,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight": 2.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "TSLA",
+        "name": "Tesla, Inc.",
+        "weight": 2.5,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "NFLX",
+        "name": "Netflix, Inc.",
+        "weight": 2.2,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "COST",
+        "name": "Costco Wholesale Corp.",
+        "weight": 2.0,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "AMD",
+        "name": "Advanced Micro Devices",
+        "weight": 1.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "ADBE",
+        "name": "Adobe Inc.",
+        "weight": 1.6,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "CRM",
+        "name": "Salesforce, Inc.",
+        "weight": 1.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "INTU",
+        "name": "Intuit Inc.",
+        "weight": 1.4,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "CSCO",
+        "name": "Cisco Systems, Inc.",
+        "weight": 1.3,
+        "sector": "Technology"
+      }
+    ]
+  },
+  "VGT": {
+    "name": "Vanguard Information Technology ETF",
+    "source": "Vanguard",
+    "coverage": 65,
+    "holdings": [
+      {
+        "ticker": "AAPL",
+        "name": "Apple Inc.",
+        "weight": 14.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "NVDA",
+        "name": "NVIDIA Corporation",
+        "weight": 13.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight": 12.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AVGO",
+        "name": "Broadcom Inc.",
+        "weight": 4.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "CRM",
+        "name": "Salesforce, Inc.",
+        "weight": 2.3,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "ORCL",
+        "name": "Oracle Corporation",
+        "weight": 2.2,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AMD",
+        "name": "Advanced Micro Devices",
+        "weight": 2.0,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "ADBE",
+        "name": "Adobe Inc.",
+        "weight": 1.9,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "CSCO",
+        "name": "Cisco Systems, Inc.",
+        "weight": 1.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "INTU",
+        "name": "Intuit Inc.",
+        "weight": 1.7,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "IBM",
+        "name": "IBM Corporation",
+        "weight": 1.6,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "QCOM",
+        "name": "QUALCOMM Inc.",
+        "weight": 1.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "AMAT",
+        "name": "Applied Materials, Inc.",
+        "weight": 1.4,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "TXN",
+        "name": "Texas Instruments Inc.",
+        "weight": 1.3,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "SNPS",
+        "name": "Synopsys, Inc.",
+        "weight": 1.2,
+        "sector": "Technology"
+      }
+    ]
+  },
+  "IWM": {
+    "name": "iShares Russell 2000 ETF",
+    "source": "iShares / BlackRock",
+    "coverage": 5,
+    "holdings": [
+      {
+        "ticker": "SMCI",
+        "name": "Super Micro Computer, Inc.",
+        "weight": 0.65,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "INSM",
+        "name": "Insmed Incorporated",
+        "weight": 0.55,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "FN",
+        "name": "Fabrinet",
+        "weight": 0.52,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "CRUS",
+        "name": "Cirrus Logic, Inc.",
+        "weight": 0.48,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "KTOS",
+        "name": "Kratos Defense & Security",
+        "weight": 0.45,
+        "sector": "Aerospace & Defense"
+      },
+      {
+        "ticker": "WFRD",
+        "name": "Weatherford International",
+        "weight": 0.42,
+        "sector": "Energy"
+      },
+      {
+        "ticker": "PIPR",
+        "name": "Piper Sandler Companies",
+        "weight": 0.4,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "COOP",
+        "name": "Mr. Cooper Group Inc.",
+        "weight": 0.38,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "LNTH",
+        "name": "Lantheus Holdings, Inc.",
+        "weight": 0.36,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "CSWI",
+        "name": "CSW Industrials, Inc.",
+        "weight": 0.34,
+        "sector": "Other"
+      }
+    ]
+  },
+  "DIA": {
+    "name": "SPDR Dow Jones Industrial Average ETF",
+    "source": "State Street / SSGA",
+    "coverage": 50,
+    "holdings": [
+      {
+        "ticker": "GS",
+        "name": "Goldman Sachs Group",
+        "weight": 7.8,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "UNH",
+        "name": "UnitedHealth Group Inc.",
+        "weight": 7.2,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "MSFT",
+        "name": "Microsoft Corporation",
+        "weight": 5.8,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "HD",
+        "name": "The Home Depot, Inc.",
+        "weight": 5.5,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "CAT",
+        "name": "Caterpillar Inc.",
+        "weight": 4.8,
+        "sector": "Other"
+      },
+      {
+        "ticker": "AMGN",
+        "name": "Amgen Inc.",
+        "weight": 4.2,
+        "sector": "Healthcare"
+      },
+      {
+        "ticker": "V",
+        "name": "Visa Inc.",
+        "weight": 3.8,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "CRM",
+        "name": "Salesforce, Inc.",
+        "weight": 3.5,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "MCD",
+        "name": "McDonald's Corporation",
+        "weight": 3.2,
+        "sector": "Consumer Discretionary"
+      },
+      {
+        "ticker": "BA",
+        "name": "The Boeing Company",
+        "weight": 2.8,
+        "sector": "Aerospace & Defense"
+      },
+      {
+        "ticker": "JPM",
+        "name": "JPMorgan Chase & Co.",
+        "weight": 2.5,
+        "sector": "Financials"
+      },
+      {
+        "ticker": "AAPL",
+        "name": "Apple Inc.",
+        "weight": 2.3,
+        "sector": "Technology"
+      },
+      {
+        "ticker": "WMT",
+        "name": "Walmart Inc.",
+        "weight": 2.1,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "PG",
+        "name": "Procter & Gamble Co.",
+        "weight": 1.9,
+        "sector": "Consumer Staples"
+      },
+      {
+        "ticker": "JNJ",
+        "name": "Johnson & Johnson",
+        "weight": 1.8,
+        "sector": "Healthcare"
+      }
     ]
   }
 }
