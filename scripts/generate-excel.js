@@ -1,6 +1,6 @@
 /**
- * LFNF Fund — Premium Excel Generator
- * Generates a highly stylized, professional, standalone Excel file.
+ * LFNF Fund — Premium Smart Excel Generator
+ * Generates an interactive, formula-driven Excel template connecting to Finnhub via WEBSERVICE.
  */
 import ExcelJS from 'exceljs';
 import { readFileSync } from 'fs';
@@ -18,10 +18,11 @@ const PALETTE = {
   headerBg: 'FF0F172A',     // Slate 900
   headerBgAccent: 'FF3B82F6', // Blue 500
   headerText: 'FFFFFFFF',   // White
+  inputBg: 'FFFFFBEB',      // Amber 50 (Input indication)
+  inputBorder: 'FFF59E0B',  // Amber 500
   rowAltBg: 'FFF8FAFC',     // Slate 50
   borderLight: 'FFE2E8F0',  // Slate 200
-  positive: 'FF10B981',     // Emerald 500
-  negative: 'FFEF4444',     // Red 500
+  formulaBg: 'FFF0FDF4',    // Green 50 (Calculated fields)
 };
 
 const BORDER_STYLE = {
@@ -29,6 +30,13 @@ const BORDER_STYLE = {
   left: { style: 'thin', color: { argb: PALETTE.borderLight } },
   bottom: { style: 'thin', color: { argb: PALETTE.borderLight } },
   right: { style: 'thin', color: { argb: PALETTE.borderLight } }
+};
+
+const BORDER_INPUT = {
+  top: { style: 'medium', color: { argb: PALETTE.inputBorder } },
+  left: { style: 'medium', color: { argb: PALETTE.inputBorder } },
+  bottom: { style: 'medium', color: { argb: PALETTE.inputBorder } },
+  right: { style: 'medium', color: { argb: PALETTE.inputBorder } }
 };
 
 const STYLE = {
@@ -44,74 +52,72 @@ const STYLE = {
     alignment: { vertical: 'middle', horizontal: 'left' }
   },
   cellNormal: {
-    font: { name: 'Calibri', size: 11, color: { argb: 'FF334155' } }, // Slate 700
-    alignment: { vertical: 'middle' },
+    font: { name: 'Calibri', size: 11, color: { argb: 'FF334155' } },
+    alignment: { vertical: 'middle', horizontal: 'center' },
     border: BORDER_STYLE
   },
   cellAlt: {
     font: { name: 'Calibri', size: 11, color: { argb: 'FF334155' } },
     fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.rowAltBg } },
-    alignment: { vertical: 'middle' },
+    alignment: { vertical: 'middle', horizontal: 'center' },
+    border: BORDER_STYLE
+  },
+  cellInput: {
+    font: { name: 'Calibri', size: 12, bold: true, color: { argb: 'FF0F172A' } },
+    fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.inputBg } },
+    alignment: { vertical: 'middle', horizontal: 'center' },
+    border: BORDER_INPUT
+  },
+  cellFormula: {
+    font: { name: 'Calibri', size: 11, color: { argb: 'FF334155' } },
+    fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: PALETTE.formulaBg } },
+    alignment: { vertical: 'middle', horizontal: 'center' },
     border: BORDER_STYLE
   },
   cellBold: {
     font: { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF0F172A' } },
-    alignment: { vertical: 'middle' },
+    alignment: { vertical: 'middle', horizontal: 'left' },
     border: BORDER_STYLE
   }
 };
+
+/**
+ * Returns a robust WEBSERVICE formula for Finnhub to extract the current price ("c")
+ */
+function getFinnhubFormula(cellRef) {
+  const token = 'd7c0pe1r01quh9fc4230d7c0pe1r01quh9fc423g';
+  // Use exact references. Since Excel parses strings, we wrap it properly.
+  // Formula logic: Extracts "c" property value from JSON string response.
+  return `IF(${cellRef}="","", NUMBERVALUE(MID(WEBSERVICE("https://finnhub.io/api/v1/quote?symbol="&${cellRef}&"&token=${token}"), FIND("""c"":", WEBSERVICE("https://finnhub.io/api/v1/quote?symbol="&${cellRef}&"&token=${token}"))+4, FIND(",", WEBSERVICE("https://finnhub.io/api/v1/quote?symbol="&${cellRef}&"&token=${token}"), FIND("""c"":", WEBSERVICE("https://finnhub.io/api/v1/quote?symbol="&${cellRef}&"&token=${token}"))+4) - (FIND("""c"":", WEBSERVICE("https://finnhub.io/api/v1/quote?symbol="&${cellRef}&"&token=${token}"))+4)), "."))`;
+}
 
 async function generateExcel() {
   const wb = new ExcelJS.Workbook();
   wb.creator = 'LFNF Fund Manager';
   wb.created = new Date();
 
-  // ═══════════════════════════════════════════
-  // DATA PREP
-  // ═══════════════════════════════════════════
   const fund = portfolio.fund;
   const holdings = portfolio.holdings;
   
-  // Consolidate ETFs and Stocks
-  let maxAllocationObj = { ticker: '-', allocation: 0, name: '-' };
-  let etfCount = 0;
-  let stockCount = 0;
-  const sectors = {};
-  
-  holdings.forEach(h => {
-    if (h.type === 'ETF') etfCount++;
-    if (h.type === 'Stock') stockCount++;
-    if (!sectors[h.sector]) sectors[h.sector] = { count: 0, allocation: 0 };
-    sectors[h.sector].count++;
-    sectors[h.sector].allocation += h.allocation;
-    if (h.allocation > maxAllocationObj.allocation) {
-      maxAllocationObj = h;
-    }
-  });
-  
-  const sectorEntries = Object.entries(sectors).sort((a, b) => b[1].allocation - a[1].allocation);
-
   // ═══════════════════════════════════════════
   // SHEET 1: DASHBOARD
   // ═══════════════════════════════════════════
   const wsDash = wb.addWorksheet('📊 Dashboard', { views: [{ showGridLines: false }] });
   
   wsDash.columns = [
-    { width: 4 },   // A - Spacer
-    { width: 28 },  // B - Metric Label
-    { width: 28 },  // C - Metric Value
-    { width: 4 },   // D - Spacer
-    { width: 33 },  // E - Analytics Label
-    { width: 14 }   // F - Analytics Value
+    { width: 4 },   // A
+    { width: 35 },  // B
+    { width: 30 },  // C
+    { width: 4 },   // D
+    { width: 35 },  // E
+    { width: 20 }   // F
   ];
 
-  // Header
   wsDash.mergeCells('B2:F3');
   const titleCell = wsDash.getCell('B2');
-  titleCell.value = ' LFNF FUND — PORTAFOLIO DASHBOARD';
+  titleCell.value = ' LFNF FUND — PORTAFOLIO MAIN DASHBOARD';
   titleCell.style = STYLE.title;
 
-  // Fund Info Block
   const createSubheader = (cellRef, text) => {
     const c = wsDash.getCell(cellRef);
     c.value = text;
@@ -120,165 +126,122 @@ async function generateExcel() {
     c.alignment = { vertical: 'middle', horizontal: 'center' };
   };
 
-  wsDash.mergeCells('B5:C5'); createSubheader('B5', 'INFORMACIÓN DEL FONDO');
-  wsDash.mergeCells('E5:F5'); createSubheader('E5', 'MÉTRICAS CLAVE');
+  wsDash.mergeCells('B5:C5'); createSubheader('B5', 'DATOS GENERALES DEL FONDO');
+  wsDash.mergeCells('E5:F5'); createSubheader('E5', 'MÉTRICAS (Cálculo Automático)');
 
-  const addDashRow = (rowNum, label1, val1, format1, label2, val2, format2) => {
+  const addRow = (rowNum, l1, v1, s1, f1, l2, v2, s2, f2) => {
     const r = wsDash.getRow(rowNum);
-    // Left Metric
-    r.getCell('B').value = `  ${label1}`;
+    r.getCell('B').value = `  ${l1}`;
     r.getCell('B').style = STYLE.cellBold;
-    r.getCell('C').value = val1;
-    r.getCell('C').style = STYLE.cellNormal;
-    if (format1) r.getCell('C').numFmt = format1;
+    r.getCell('C').value = v1;
+    r.getCell('C').style = s1 || STYLE.cellNormal;
+    if (f1) r.getCell('C').numFmt = f1;
     
-    // Right Metric
-    r.getCell('E').value = `  ${label2}`;
+    r.getCell('E').value = `  ${l2}`;
     r.getCell('E').style = STYLE.cellBold;
-    r.getCell('F').value = val2;
-    r.getCell('F').style = STYLE.cellNormal;
-    r.getCell('F').alignment = { horizontal: 'center' };
-    if (format2) r.getCell('F').numFmt = format2;
-    r.height = 20;
+    r.getCell('F').value = v2;
+    r.getCell('F').style = s2 || STYLE.cellFormula;
+    if (f2) r.getCell('F').numFmt = f2;
+    r.height = 24;
   };
 
-  addDashRow(6, 'Nombre', fund.name, null, 'Total Holdings', holdings.length, null);
-  addDashRow(7, 'Propietario', fund.fullName, null, 'Total ETFs', etfCount, null);
-  addDashRow(8, 'Moneda', fund.currency, null, 'Total Acciones', stockCount, null);
-  addDashRow(9, 'Valor Total (Estimado)', fund.totalValueCLP, '"$"#,##0', 'Asignación Total', holdings.reduce((s, h) => s + h.allocation, 0) / 100, '0.0%');
-  addDashRow(10, 'Broker', fund.broker, null, 'Top Holding', maxAllocationObj.ticker, null);
-  addDashRow(11, 'Benchmark', fund.benchmark, null, 'Mayor Sector', sectorEntries.length > 0 ? sectorEntries[0][0] : '-', null);
+  // Capital Variable - Input
+  addRow(6, 
+    'Fondo / Propietario', fund.name, STYLE.cellNormal, null,
+    'Suma Asignación (%)', { formula: "SUM('💼 Holdings'!C:C)" }, STYLE.cellFormula, '0.00%');
   
-  // Sectors Breakdown
-  wsDash.mergeCells('B14:C14'); createSubheader('B14', 'DISTRIBUCIÓN SECTORIAL');
-  wsDash.getRow(15).values = ['', 'Sector', 'Asignación'];
-  wsDash.getCell('B15').style = STYLE.header; wsDash.getCell('C15').style = STYLE.header;
-  
-  let rowIdx = 16;
-  for (const [sector, d] of sectorEntries) {
-    wsDash.getRow(rowIdx).values = ['', sector, d.allocation / 100];
-    wsDash.getCell(`B${rowIdx}`).style = (rowIdx%2===0)? STYLE.cellAlt:STYLE.cellNormal;
-    wsDash.getCell(`C${rowIdx}`).style = (rowIdx%2===0)? STYLE.cellAlt:STYLE.cellNormal;
-    wsDash.getCell(`C${rowIdx}`).numFmt = '0.00%';
-    rowIdx++;
-  }
+  addRow(7, 
+    'Moneda Base', fund.currency, STYLE.cellNormal, null,
+    'Cantidad de Holdings', { formula: "COUNTA('💼 Holdings'!A:A)-1" }, STYLE.cellFormula, '0');
+    
+  addRow(8,
+    'TIPO DE CAMBIO (USD a CLP) ✏️', 900, STYLE.cellInput, '"$"#,##0',
+    'Benchmark Seleccionado', fund.benchmark, STYLE.cellNormal, null);
 
+  addRow(9, 
+    'CAPITAL TOTAL INVERTIDO (CLP) ✏️', fund.totalValueCLP, STYLE.cellInput, '"$"#,##0',
+    'Precio Actual Benchmark (USD)', { formula: getFinnhubFormula('"SPY"') }, STYLE.cellFormula, '"$"#,##0.00');
+
+  // Small instructions note
+  wsDash.mergeCells('B11:F11');
+  const instCell = wsDash.getCell('B11');
+  instCell.value = '💡 NOTA: Las celdas en AMARILLO son variables (Inputs). Modifica el Capital Total y el tipo de cambio y toda la Hoja 2 se actualizará.';
+  instCell.font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FF64748B' } };
+  
   // ═══════════════════════════════════════════
-  // SHEET 2: HOLDINGS
+  // SHEET 2: HOLDINGS (DYNAMIC)
   // ═══════════════════════════════════════════
   const wsHold = wb.addWorksheet('💼 Holdings');
   
   wsHold.columns = [
-    { header: 'Ticker', key: 'ticker', width: 10 },
-    { header: 'Nombre / Empresa', key: 'name', width: 35 },
-    { header: 'Tipo', key: 'type', width: 10 },
-    { header: 'Sector', key: 'sector', width: 25 },
-    { header: 'Asignación (%)', key: 'alloc', width: 15 },
-    { header: 'Valor Est. (CLP)', key: 'val', width: 18 },
-    { header: 'Notas', key: 'notes', width: 40 },
+    { header: 'Ticker (Input) ✏️', key: 'ticker', width: 15 },
+    { header: 'Nombre (Input) ✏️', key: 'name', width: 40 },
+    { header: 'Asignación % (Input) ✏️', key: 'alloc', width: 25 },
+    { header: 'Valor Objetivo (CLP) ⚙️', key: 'targetclp', width: 25 },
+    { header: 'Precio Mercado (USD) 🌐', key: 'price', width: 25 },
+    { header: 'Comprar (Cuotas aprox.) ⚙️', key: 'shares', width: 30 },
   ];
 
-  // Apply Header Style
-  wsHold.getRow(1).eachCell(cell => { cell.style = STYLE.header; });
+  wsHold.getRow(1).eachCell((cell, colNumber) => {
+    cell.style = STYLE.header;
+    // Highlight input headers
+    if (colNumber <= 3) {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD97706' } }; // Dark amber
+    }
+  });
   wsHold.getRow(1).height = 25;
 
   let hRow = 2;
-  const totalValueRef = fund.totalValueCLP;
   
-  holdings.forEach(h => {
+  // Create 30 rows setup (18 prefilled, rest blank for user to add)
+  for (let i = 0; i < 30; i++) {
+    const h = holdings[i] || { ticker: '', name: '', allocation: 0 };
+    
     const row = wsHold.addRow({
       ticker: h.ticker,
       name: h.name,
-      type: h.type,
-      sector: h.sector,
-      alloc: h.allocation / 100, // Excel % format needs decimal
-      notes: h.notes || ''
+      alloc: h.allocation > 0 ? (h.allocation / 100) : ''
     });
     
-    // Formula for Estimated Value based on %
-    row.getCell('val').value = { formula: `E${hRow}*${totalValueRef}` };
-    
-    // Styling
-    const styleToUse = (hRow % 2 === 0) ? STYLE.cellAlt : STYLE.cellNormal;
-    row.eachCell(cell => { cell.style = Object.assign({}, styleToUse); });
-    
-    // Formatting
+    // Style inputs
+    row.getCell('ticker').style = STYLE.cellInput;
+    row.getCell('name').style = STYLE.cellInput;
+    row.getCell('alloc').style = STYLE.cellInput;
     row.getCell('alloc').numFmt = '0.00%';
-    row.getCell('val').numFmt = '"$"#,##0';
-    
+
+    // Formulas
+    // Target CLP = Alloc * Dashboard Total CLP
+    row.getCell('targetclp').value = { formula: `IF(C${hRow}="","", C${hRow}*'📊 Dashboard'!$C$9)` };
+    row.getCell('targetclp').style = STYLE.cellFormula;
+    row.getCell('targetclp').numFmt = '"$"#,##0';
+
+    // Market Price USD = Finnhub API
+    row.getCell('price').value = { formula: getFinnhubFormula(`A${hRow}`) };
+    row.getCell('price').style = STYLE.cellFormula;
+    row.getCell('price').numFmt = '"$"#,##0.00';
+
+    // Shares to buy = Target CLP / (Price USD * FX)
+    row.getCell('shares').value = { formula: `IF(E${hRow}="","", D${hRow}/(E${hRow}*'📊 Dashboard'!$C$8))` };
+    row.getCell('shares').style = STYLE.cellFormula;
+    row.getCell('shares').numFmt = '0.00';
+
     hRow++;
-  });
-
-  wsHold.autoFilter = `A1:G${hRow - 1}`;
-
-  // ═══════════════════════════════════════════
-  // SHEET 3: ETF TRANSPARENCIA
-  // ═══════════════════════════════════════════
-  const wsEtf = wb.addWorksheet('🔍 ETF_Holdings');
-  
-  wsEtf.columns = [
-    { header: 'ETF Padre', key: 'etf', width: 12 },
-    { header: 'Nombre del Fondo', key: 'etfName', width: 35 },
-    { header: 'Ticker Real', key: 'stock', width: 12 },
-    { header: 'Nombre Empresa', key: 'stockName', width: 35 },
-    { header: 'Sector', key: 'sector', width: 25 },
-    { header: 'Peso en ETF', key: 'weight', width: 15 },
-    { header: 'Exposición Total (% en Portafolio)', key: 'realWeight', width: 28 },
-  ];
-
-  wsEtf.getRow(1).eachCell(cell => { cell.style = STYLE.header; });
-  wsEtf.getRow(1).height = 25;
-
-  let eRow = 2;
-  const etfAllocMap = {};
-  holdings.filter(h => h.type === 'ETF').forEach(h => { etfAllocMap[h.ticker] = h.allocation; });
-
-  const customEtfRows = [];
-  for (const [etfTicker, etfData] of Object.entries(etfHoldings)) {
-    if (etfTicker === '_meta') continue;
-    const etfAlloc = etfAllocMap[etfTicker] || 0;
-    
-    for (const sub of etfData.holdings) {
-      const realWeight = (sub.weight / 100) * etfAlloc;
-      customEtfRows.push({
-        etf: etfTicker,
-        etfName: etfData.name,
-        stock: sub.ticker,
-        stockName: sub.name,
-        sector: sub.sector,
-        weight: sub.weight / 100,
-        realWeight: realWeight / 100
-      });
-    }
   }
 
-  // Sort by real portfolio weight descending
-  customEtfRows.sort((a, b) => b.realWeight - a.realWeight);
-
-  customEtfRows.forEach(data => {
-    const row = wsEtf.addRow(data);
-    const styleToUse = (eRow % 2 === 0) ? STYLE.cellAlt : STYLE.cellNormal;
-    row.eachCell(cell => { cell.style = Object.assign({}, styleToUse); });
-    
-    row.getCell('weight').numFmt = '0.00%';
-    row.getCell('realWeight').numFmt = '0.00%';
-    
-    if (data.realWeight >= 0.01) {
-      row.getCell('realWeight').font = { ...styleToUse.font, bold: true, color: { argb: PALETTE.headerBgAccent } };
-    }
-    
-    eRow++;
-  });
+  wsHold.autoFilter = `A1:F${hRow - 1}`;
   
-  wsEtf.autoFilter = `A1:G${eRow - 1}`;
+  // Add Warning for API 
+  const warningRow = wsHold.addRow(['', '', '', '', '', '']);
+  warningRow.getCell(2).value = 'Nota: Al abrir el archivo, Excel puede pedir habilitar la conexión de datos (WEBSERVICE). Acéptalo para ver precios reales.';
+  warningRow.getCell(2).font = { italic: true, color: { argb: 'FFEF4444' } };
 
   // ═══════════════════════════════════════════
   // WRITE FILE
   // ═══════════════════════════════════════════
-  const outputPath = join(__dirname, '..', 'fund-management.xlsx');
+  const outputPath = join(__dirname, '..', 'LFNF_Fund_Management.xlsx');
   await wb.xlsx.writeFile(outputPath);
   
-  console.log(`✅ Excel PREMIUM generado exitosamente en: ${outputPath}`);
+  console.log(`✅ Excel DINÁMICO generado exitosamente en: ${outputPath}`);
 }
 
 generateExcel().catch(err => {
